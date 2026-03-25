@@ -78,6 +78,32 @@ with st.sidebar:
     st.caption(f"🤖 模型: {st.session_state.get('model', 'llama3:8b')}")
 
     st.markdown("---")
+    st.markdown("### 📜 问答历史")
+
+    # 获取历史记录
+    chat_history = st.session_state.rag_chain.metadata_store.get_chat_history(limit=10)
+
+    if chat_history:
+        st.caption(f"共 {len(chat_history)} 条记录")
+
+        # 显示最近的历史记录
+        for i, chat in enumerate(chat_history):
+            with st.expander(f"Q: {chat['question'][:40]}...", key=f"history_{i}"):
+                st.markdown(f"**问题:** {chat['question']}")
+                st.markdown(f"**答案:** {chat['answer']}")
+                st.caption(f"⏰ {chat['timestamp']}")
+
+        # 清空历史按钮
+        if st.button("🗑️ 清空历史", key="clear_history"):
+            if st.session_state.rag_chain.metadata_store.clear_chat_history():
+                st.success("历史记录已清空")
+                st.rerun()
+            else:
+                st.error("清空失败")
+    else:
+        st.caption("暂无历史记录")
+
+    st.markdown("---")
     st.markdown("### 📂 功能导航")
 
     page = st.radio(
@@ -136,13 +162,20 @@ if page == "💬 问答":
                         for source in result['sources']:
                             st.caption(f"📄 {source['source_name']} [相似度: {source['similarity']:.2f}]")
 
-            # 保存到历史
+            # 保存到历史（内存）
             st.session_state.messages.append({
                 'role': 'assistant',
                 'content': result['answer'],
                 'sources': result.get('sources', []),
                 'metadata': result.get('metadata', {})
             })
+
+            # 保存到数据库
+            st.session_state.rag_chain.metadata_store.save_chat(
+                question=prompt,
+                answer=result['answer'],
+                sources=result.get('sources', [])
+            )
 
 elif page == "📄 文档管理":
     st.title("📄 文档管理")

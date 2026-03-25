@@ -58,6 +58,17 @@ class MetadataStore:
             )
         """)
 
+        # 创建问答历史表
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                question TEXT NOT NULL,
+                answer TEXT NOT NULL,
+                sources TEXT,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
         # 创建索引
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_source_id
@@ -67,6 +78,11 @@ class MetadataStore:
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_status
             ON documents(status)
+        """)
+
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_chat_timestamp
+            ON chat_history(timestamp DESC)
         """)
 
     def _init_db(self):
@@ -309,4 +325,114 @@ class MetadataStore:
 
         except Exception as e:
             logger.error(f"删除文档失败: {e}")
+            return False
+
+    def save_chat(self, question: str, answer: str, sources: Optional[List[dict]] = None) -> bool:
+        """
+        保存问答记录到历史
+
+        Args:
+            question: 用户问题
+            answer: AI 回答
+            sources: 来源文档列表
+
+        Returns:
+            bool: 是否保存成功
+        """
+        try:
+            import json
+
+            conn = self._get_connection()
+            cursor = conn.cursor()
+
+            # 将 sources 转为 JSON 字符串
+            sources_json = json.dumps(sources) if sources else None
+
+            cursor.execute("""
+                INSERT INTO chat_history (question, answer, sources)
+                VALUES (?, ?, ?)
+            """, (question, answer, sources_json))
+
+            conn.commit()
+
+            if not self.is_memory_mode:
+                conn.close()
+
+            logger.info(f"保存问答记录: {question[:50]}...")
+            return True
+
+        except Exception as e:
+            logger.error(f"保存问答记录失败: {e}")
+            return False
+
+    def get_chat_history(self, limit: int = 50) -> List[dict]:
+        """
+        获取问答历史
+
+        Args:
+            limit: 返回记录数量限制
+
+        Returns:
+            List[dict]: 问答历史列表
+        """
+        try:
+            import json
+
+            conn = self._get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                SELECT id, question, answer, sources, timestamp
+                FROM chat_history
+                ORDER BY timestamp DESC
+                LIMIT ?
+            """, (limit,))
+
+            rows = cursor.fetchall()
+
+            if not self.is_memory_mode:
+                conn.close()
+
+            history = []
+            for row in rows:
+                # 解析 sources JSON
+                sources = json.loads(row[3]) if row[3] else []
+
+                history.append({
+                    'id': row[0],
+                    'question': row[1],
+                    'answer': row[2],
+                    'sources': sources,
+                    'timestamp': row[4]
+                })
+
+            return history
+
+        except Exception as e:
+            logger.error(f"获取问答历史失败: {e}")
+            return []
+
+    def clear_chat_history(self) -> bool:
+        """
+        清空所有问答历史
+
+        Returns:
+            bool: 是否清空成功
+        """
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("DELETE FROM chat_history")
+
+            conn.commit()
+
+            if not self.is_memory_mode:
+                conn.close()
+
+            logger.info("已清空问答历史")
+            return True
+
+        except Exception as e:
+            logger.error(f"清空问答历史失败: {e}")
             return False
