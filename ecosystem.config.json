@@ -3,7 +3,6 @@
     "name": "ai-kb",
     "script": "/home/ubuntu/ai-knowledge-base/start_streamlit.sh",
     "cwd": "/home/ubuntu/ai-knowledge-base",
-    "user": "ubuntu",
     "instances": 1,
     "autostart": true,
     "watch": false,
