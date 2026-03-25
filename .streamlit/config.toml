@@ -1,0 +1,28 @@
+[theme]
+
+# Liquid Glass 液态玻璃风格配置
+primaryColor = "#5856D6"              # 紫罗兰 - 渐变中间色
+backgroundColor = "#F5F5F7"           # 浅灰起始色
+secondaryBackgroundColor = "#E8E8ED"  # 浅灰结束色
+textColor = "#1D1D1F"                 # 深灰文字
+
+# 字体配置
+font = "sans serif"
+
+# 边框和圆角
+base = "dark"
+
+[client]
+showErrorDetails = false
+maxUploadSize = 200                   # 最大上传200MB
+
+[server]
+headless = true
+port = 8501
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+serverAddress = "localhost"
+serverPort = 8501

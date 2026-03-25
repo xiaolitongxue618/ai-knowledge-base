@@ -24,160 +24,624 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Liquid Glass 液态玻璃风格自定义CSS（优化版）
+liquid_glass_css = """
+<style>
+    /* ==================== 全局背景动画 ==================== */
+    .stApp {
+        background: linear-gradient(135deg, #F5F5F7 0%, #E8E8ED 100%) !important;
+        background-size: 400% 400% !important;
+        animation: gradientFlow 15s ease infinite !important;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+                     "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif !important;
+        font-size: 19px !important;
+        font-weight: 500 !important;
+        line-height: 1.5 !important;
+        letter-spacing: -0.01em !important;
+        -webkit-font-smoothing: antialiased !important;
+    }
+
+    @keyframes gradientFlow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* ==================== 毛玻璃卡片基础 ==================== */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.6) !important;
+        backdrop-filter: blur(30px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+        border-radius: 24px !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        box-shadow:
+            0 8px 32px rgba(0, 113, 227, 0.12),
+            0 0 0 1px rgba(255, 255, 255, 0.6) inset !important;
+        transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+    }
+
+    /* ==================== 标题 ==================== */
+    h1 {
+        font-size: 40px !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.03em !important;
+        line-height: 1.1 !important;
+        background: linear-gradient(135deg, #0071E3 0%, #5856D6 50%, #AF52DE 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        background-size: 200% 200% !important;
+        animation: gradientText 8s ease infinite !important;
+    }
+
+    @keyframes gradientText {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    h2 {
+        font-size: 32px !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.025em !important;
+        line-height: 1.2 !important;
+        background: linear-gradient(135deg, #0071E3, #5856D6) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+    }
+
+    h3 {
+        font-size: 26px !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.25 !important;
+    }
+
+    /* ==================== 液态玻璃按钮 ==================== */
+    .stButton > button {
+        border-radius: 9999px !important;
+        padding: 16px 32px !important;
+        font-size: 19px !important;
+        font-weight: 600 !important;
+        transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+        border: none !important;
+    }
+
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #0071E3 0%, #5856D6 100%) !important;
+        background-size: 200% 200% !important;
+        color: white !important;
+        box-shadow:
+            0 4px 16px rgba(0, 113, 227, 0.3),
+            inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        animation: btnGradient 6s ease infinite !important;
+    }
+
+    @keyframes btnGradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* ==================== 次要按钮（毛玻璃样式） ==================== */
+    .stButton > button:not([kind="primary"]) {
+        background: rgba(235, 240, 250, 0.8) !important;
+        backdrop-filter: blur(25px) saturate(200%) !important;
+        -webkit-backdrop-filter: blur(25px) saturate(200%) !important;
+        border: 1px solid rgba(200, 210, 230, 0.8) !important;
+        color: #1D1D1F !important;
+        border-radius: 14px !important;
+        padding: 14px 24px !important;
+        font-size: 15px !important;
+        font-weight: 500 !important;
+        box-shadow:
+            0 2px 8px rgba(0, 113, 227, 0.08),
+            inset 0 1px 2px rgba(255, 255, 255, 0.6) !important;
+        transition: background 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    /* 悬停状态 - 明显的蓝色 */
+    .stButton > button:not([kind="primary"]):hover {
+        background: rgba(100, 150, 255, 0.25) !important;
+        border-color: rgba(0, 113, 227, 0.5) !important;
+        box-shadow:
+            0 4px 12px rgba(0, 113, 227, 0.2),
+            inset 0 1px 2px rgba(255, 255, 255, 0.7) !important;
+    }
+
+    /* 点击状态 - 更深的蓝色 */
+    .stButton > button:not([kind="primary"]):active {
+        background: rgba(0, 113, 227, 0.3) !important;
+        border-color: rgba(0, 113, 227, 0.7) !important;
+        box-shadow:
+            0 2px 6px rgba(0, 113, 227, 0.3),
+            inset 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* 针对导航按钮的特定样式 */
+    button[data-key="nav_chat"]:hover,
+    button[data-key="nav_docs"]:hover,
+    button[data-key="nav_debug"]:hover {
+        background: rgba(100, 150, 255, 0.3) !important;
+        border-color: rgba(0, 113, 227, 0.6) !important;
+    }
+
+    button[data-key="nav_chat"]:active,
+    button[data-key="nav_docs"]:active,
+    button[data-key="nav_debug"]:active {
+        background: rgba(0, 113, 227, 0.4) !important;
+        border-color: rgba(0, 113, 227, 0.8) !important;
+    }
+
+    .stButton > button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #0071E3 0%, #5856D6 50%, #AF52DE 100%) !important;
+        box-shadow:
+            0 6px 20px rgba(0, 113, 227, 0.5),
+            inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
+    }
+
+    .stButton > button[kind="primary"]:active {
+        background: linear-gradient(135deg, #0050C5 0%, #4836A6 50%, #8F3CB8 100%) !important;
+        box-shadow:
+            0 4px 12px rgba(0, 113, 227, 0.6),
+            inset 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .stButton > button[kind="secondary"] {
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        color: #0071E3 !important;
+        box-shadow:
+            0 2px 8px rgba(0, 113, 227, 0.1),
+            inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
+    }
+
+    .stButton > button[kind="secondary"]:hover {
+        background: rgba(255, 255, 255, 0.8) !important;
+        backdrop-filter: blur(30px) !important;
+        -webkit-backdrop-filter: blur(30px) !important;
+        box-shadow:
+            0 4px 12px rgba(0, 113, 227, 0.15),
+            inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+    }
+
+    /* ==================== 毛玻璃输入框 ==================== */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea,
+    .stSelectbox > div > div > select {
+        border-radius: 18px !important;
+        border: 1px solid rgba(0, 113, 227, 0.3) !important;
+        padding: 16px 24px !important;
+        font-size: 19px !important;
+        font-weight: 500 !important;
+        background: rgba(255, 255, 255, 0.5) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
+    }
+
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus,
+    .stSelectbox > div > div > select:focus {
+        border: 2px solid !important;
+        border-image: linear-gradient(135deg, #0071E3, #5856D6) 1 !important;
+        box-shadow:
+            0 0 0 6px rgba(0, 113, 227, 0.15),
+            inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+        backdrop-filter: blur(30px) !important;
+        -webkit-backdrop-filter: blur(30px) !important;
+    }
+
+    /* ==================== 毛玻璃卡片 ==================== */
+    .stMetric {
+        background: rgba(255, 255, 255, 0.6) !important;
+        backdrop-filter: blur(30px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        border-radius: 24px !important;
+        padding: 24px !important;
+        box-shadow:
+            0 8px 32px rgba(0, 113, 227, 0.12),
+            0 0 0 1px rgba(255, 255, 255, 0.5) inset !important;
+        transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+    }
+
+    .stMetric:hover {
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(35px) saturate(200%) !important;
+        -webkit-backdrop-filter: blur(35px) saturate(200%) !important;
+        box-shadow:
+            0 12px 40px rgba(0, 113, 227, 0.16),
+            0 0 0 1px rgba(255, 255, 255, 0.7) inset !important;
+    }
+
+    /* ==================== 毛玻璃文件上传器 ==================== */
+    .stFileUploader {
+        border: 2px dashed rgba(0, 113, 227, 0.4) !important;
+        border-radius: 32px !important;
+        padding: 96px 48px !important;
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+    }
+
+    .stFileUploader:hover {
+        border-style: solid !important;
+        border-color: #5856D6 !important;
+        background: rgba(255, 255, 255, 0.8) !important;
+        backdrop-filter: blur(25px) !important;
+        -webkit-backdrop-filter: blur(25px) !important;
+    }
+
+    /* ==================== 毛玻璃展开器 ==================== */
+    .streamlit-expanderHeader {
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(30px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        border-radius: 24px !important;
+        padding: 20px 24px !important;
+        font-weight: 600 !important;
+        transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+    }
+
+    .streamlit-expanderHeader:hover {
+        background: rgba(255, 255, 255, 0.8) !important;
+        backdrop-filter: blur(35px) saturate(200%) !important;
+        -webkit-backdrop-filter: blur(35px) saturate(200%) !important;
+    }
+
+    .streamlit-expanderContent {
+        background: rgba(255, 255, 255, 0.5) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border-radius: 24px !important;
+        padding: 24px !important;
+        margin-top: 16px !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+
+    /* ==================== 毛玻璃聊天消息 ==================== */
+    .stChatMessage {
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(30px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        border-radius: 32px !important;
+        padding: 20px 24px !important;
+        box-shadow:
+            0 4px 16px rgba(0, 113, 227, 0.1),
+            0 0 0 1px rgba(255, 255, 255, 0.6) inset !important;
+    }
+
+    /* ==================== 进度条 ==================== */
+    .stProgress > div > div > div > div {
+        background: linear-gradient(135deg, #0071E3 0%, #5856D6 100%) !important;
+        background-size: 200% 200% !important;
+        animation: btnGradient 6s ease infinite !important;
+        border-radius: 9999px !important;
+    }
+
+    /* ==================== 侧边栏 ==================== */
+    .css-1d391kg, .css-1lcbmhc {
+        background: rgba(255, 255, 255, 0.5) !important;
+        backdrop-filter: blur(30px) !important;
+        -webkit-backdrop-filter: blur(30px) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+
+    /* 侧边栏 - 减少间距 */
+    .css-1d391kg h1, .css-1lcbmhc h1 {
+        margin-top: 8px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .css-1d391kg [data-testid="stMetricContainer"], .css-1lcbmhc [data-testid="stMetricContainer"] {
+        margin-bottom: 8px !important;
+        padding: 12px !important;
+    }
+
+    .css-1d391kg .stMarkdown, .css-1lcbmhc .stMarkdown {
+        margin-top: 8px !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Expander 更紧凑 */
+    .css-1d391kg .streamlit-expanderHeader, .css-1lcbmhc .streamlit-expanderHeader {
+        padding: 12px 16px !important;
+        margin-bottom: 4px !important;
+    }
+
+    /* 按钮更紧凑 */
+    .css-1d391kg button, .css-1lcbmhc button {
+        margin-bottom: 4px !important;
+        padding: 8px 16px !important;
+    }
+
+    /* ==================== 分割线 ==================== */
+    hr {
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        margin: 32px 0 !important;
+    }
+
+    /* ==================== 标签 ==================== */
+    .stBadge {
+        border-radius: 14px !important;
+        padding: 8px 16px !important;
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+</style>
+"""
+
+st.markdown(liquid_glass_css, unsafe_allow_html=True)
+
 # 初始化日志
 setup_logger(log_level="INFO")
 
 # 初始化会话状态
 if 'rag_chain' not in st.session_state:
     with st.spinner("正在初始化系统..."):
-        # 初始化组件
-        metadata_store = MetadataStore(settings.metadata_db)
-        vector_store = VectorStoreManager(settings.vector_store_dir)
-        llm_client = OllamaClient()
+        try:
+            # 初始化组件
+            metadata_store = MetadataStore(settings.metadata_db)
+            vector_store = VectorStoreManager(settings.vector_store_dir)
+            llm_client = OllamaClient()
 
-        # 检查 Ollama 连接
-        if llm_client.check_connection():
-            st.session_state.ollama_connected = True
-            st.success("✅ LLM 服务连接成功")
-        else:
-            st.session_state.ollama_connected = False
-            st.error("❌ 无法连接到 Ollama 服务，请先运行: ollama serve")
-
-        # 创建 RAG 链路
-        st.session_state.rag_chain = RAGChain(
-            vector_store=vector_store,
-            llm_client=llm_client,
-            metadata_store=metadata_store,
-            min_similarity=settings.min_similarity
-        )
-
-        st.session_state.model = settings.ollama_model
-
-# 侧边栏
-with st.sidebar:
-    st.title("📚 AI 知识库 v1.0")
-    st.markdown("---")
-
-    # 统计信息
-    docs = st.session_state.rag_chain.metadata_store.list_documents()
-    active_docs = [d for d in docs if d.status.value == 'active']
-
-    st.metric("📄 文档数量", len(active_docs))
-
-    vector_stats = st.session_state.rag_chain.vector_store.get_stats()
-    st.metric("🔢 向量数量", vector_stats['total_count'])
-
-    st.markdown("---")
-    st.markdown("### 📊 系统状态")
-
-    if st.session_state.get('ollama_connected'):
-        st.success("✅ LLM 服务正常")
-    else:
-        st.error("❌ LLM 服务未连接")
-
-    st.caption(f"🤖 模型: {st.session_state.get('model', 'llama3:8b')}")
-
-    st.markdown("---")
-    st.markdown("### 📜 问答历史")
-
-    # 获取历史记录
-    chat_history = st.session_state.rag_chain.metadata_store.get_chat_history(limit=10)
-
-    if chat_history:
-        st.caption(f"共 {len(chat_history)} 条记录")
-
-        # 显示最近的历史记录
-        for chat in chat_history:
-            with st.expander(f"Q: {chat['question'][:40]}..."):
-                st.markdown(f"**问题:** {chat['question']}")
-                st.markdown(f"**答案:** {chat['answer']}")
-                st.caption(f"⏰ {chat['timestamp']}")
-
-        # 清空历史按钮
-        if st.button("🗑️ 清空历史", key="clear_history"):
-            if st.session_state.rag_chain.metadata_store.clear_chat_history():
-                st.success("历史记录已清空")
-                st.rerun()
+            # 检查 Ollama 连接
+            if llm_client.check_connection():
+                st.session_state.ollama_connected = True
+                st.success("✅ LLM 服务连接成功")
             else:
-                st.error("清空失败")
-    else:
-        st.caption("暂无历史记录")
+                st.session_state.ollama_connected = False
+                st.error("❌ 无法连接到 Ollama 服务，请先运行: ollama serve")
+                st.stop()
 
-    st.markdown("---")
-    st.markdown("### 📤 导出")
-
-    # 导出问答历史
-    if st.button("📄 导出问答记录 (Markdown)", key="export_md"):
-        chat_history = st.session_state.rag_chain.metadata_store.get_chat_history(limit=1000)
-
-        if chat_history:
-            # 生成 Markdown 内容
-            md_content = "# 问答历史记录\n\n"
-            md_content += f"导出时间: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-            md_content += f"总计: {len(chat_history)} 条记录\n\n"
-            md_content += "---\n\n"
-
-            for i, chat in enumerate(reversed(chat_history), 1):
-                md_content += f"## 问题 {i}\n\n"
-                md_content += f"**时间:** {chat['timestamp']}\n\n"
-                md_content += f"**问题:** {chat['question']}\n\n"
-                md_content += f"**答案:** {chat['answer']}\n\n"
-
-                if chat.get('sources'):
-                    md_content += f"**来源:**\n"
-                    for source in chat['sources']:
-                        md_content += f"- {source.get('source_name', '未知')} [相似度: {source.get('similarity', 0):.2f}]\n"
-                    md_content += "\n"
-
-                md_content += "---\n\n"
-
-            # 提供下载
-            st.download_button(
-                label="⬇️ 下载 Markdown 文件",
-                data=md_content,
-                file_name=f"chat_history_{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
-                mime="text/markdown"
+            # 创建 RAG 链路
+            st.session_state.rag_chain = RAGChain(
+                vector_store=vector_store,
+                llm_client=llm_client,
+                metadata_store=metadata_store,
+                min_similarity=settings.min_similarity
             )
-        else:
-            st.info("暂无历史记录可导出")
 
-    # 导出文档列表
-    if st.button("📋 导出文档列表", key="export_docs"):
+            st.session_state.model = settings.ollama_model
+        except Exception as e:
+            st.error(f"❌ 初始化失败: {str(e)}")
+            st.stop()
+
+# 侧边栏 - Liquid Glass 液态玻璃（优化间距）
+with st.sidebar:
+    if 'rag_chain' not in st.session_state:
+        st.warning("⚠️ 系统未初始化")
+        st.stop()
+
+    # 初始化当前页面
+    if 'current_page' not in st.session_state:
+        st.session_state.current_page = "问答"
+
+    # ========== 标题（居中，留白充足） ==========
+    st.markdown("""
+    <div style="
+        text-align: center;
+        padding: 24px 0 32px 0;
+        margin-bottom: 24px;
+    ">
+        <h2 style="
+            margin: 0;
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #0071E3 0%, #5856D6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        ">AI 知识库</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ========== 导航按钮（竖向，无跳动） ==========
+    # 问答按钮
+    if st.session_state.current_page == "问答":
+        st.markdown("""
+        <style>
+        button[data-key="nav_chat"] {
+            background: linear-gradient(135deg, #0071E3 0%, #5856D6 100%) !important;
+            color: white !important;
+            font-weight: 700 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+    if st.button("💬 问答", key="nav_chat", use_container_width=True):
+        st.session_state.current_page = "问答"
+        st.rerun()
+
+    # 文档管理按钮
+    if st.session_state.current_page == "文档管理":
+        st.markdown("""
+        <style>
+        button[data-key="nav_docs"] {
+            background: linear-gradient(135deg, #0071E3 0%, #5856D6 100%) !important;
+            color: white !important;
+            font-weight: 700 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+    if st.button("📄 文档管理", key="nav_docs", use_container_width=True):
+        st.session_state.current_page = "文档管理"
+        st.rerun()
+
+    # 调试按钮
+    if st.session_state.current_page == "调试":
+        st.markdown("""
+        <style>
+        button[data-key="nav_debug"] {
+            background: linear-gradient(135deg, #0071E3 0%, #5856D6 100%) !important;
+            color: white !important;
+            font-weight: 700 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+    if st.button("🐛 调试", key="nav_debug", use_container_width=True):
+        st.session_state.current_page = "调试"
+        st.rerun()
+
+    page = st.session_state.current_page
+
+    # 分隔区（更大的间距）
+    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+
+    # ========== 统计信息（居中，增加padding） ==========
+    try:
         docs = st.session_state.rag_chain.metadata_store.list_documents()
+        active_docs = [d for d in docs if d.status.value == 'active']
+        vector_stats = st.session_state.rag_chain.vector_store.get_stats()
+    except:
+        active_docs = []
+        vector_stats = {'total_count': 0}
 
-        if docs:
-            # 生成 Markdown 内容
-            md_content = "# 文档列表\n\n"
-            md_content += f"导出时间: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-            md_content += f"总计: {len(docs)} 个文档\n\n"
-            md_content += "| 文件名 | 类型 | 大小 (KB) | 状态 | 块数 |\n"
-            md_content += "|--------|------|-----------|------|------|\n"
+    st.markdown(f"""
+    <div style="
+        background: rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(40px) saturate(200%);
+        -webkit-backdrop-filter: blur(40px) saturate(200%);
+        border-radius: 18px;
+        padding: 22px 26px;
+        margin-bottom: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        box-shadow:
+            0 8px 32px rgba(0, 113, 227, 0.15),
+            0 0 0 1px rgba(255, 255, 255, 0.8) inset,
+            0 2px 4px rgba(255, 255, 255, 0.5) inset;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    ">
+        <div style="display: flex; justify-content: center; gap: 52px;">
+            <div style="text-align: center;">
+                <p style="margin: 0; font-size: 32px; font-weight: 800; color: #0071E3;">{len(active_docs)}</p>
+                <p style="margin: 6px 0 0 0; font-size: 12px; color: #86868B; font-weight: 600;">文档</p>
+            </div>
+            <div style="text-align: center;">
+                <p style="margin: 0; font-size: 32px; font-weight: 800; color: #5856D6;">{vector_stats['total_count']}</p>
+                <p style="margin: 6px 0 0 0; font-size: 12px; color: #86868B; font-weight: 600;">向量</p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-            for doc in docs:
-                md_content += f"| {doc.file_name} | {doc.file_type} | {doc.file_size / 1024:.1f} | {doc.status.value} | {doc.chunk_count} |\n"
+    # ========== 系统状态（居中，更紧凑） ==========
+    status_dot = "#34C759" if st.session_state.get('ollama_connected') else "#FF3B30"
+    status_text = "在线" if st.session_state.get('ollama_connected') else "离线"
+    model_name = st.session_state.get('model', 'qwen2.5:0.5b')
 
-            # 提供下载
-            st.download_button(
-                label="⬇️ 下载文档列表",
-                data=md_content,
-                file_name=f"document_list_{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
-                mime="text/markdown"
-            )
+    st.markdown(f"""
+    <div style="
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(35px) saturate(200%);
+        -webkit-backdrop-filter: blur(35px) saturate(200%);
+        border-radius: 16px;
+        padding: 14px 18px;
+        margin-bottom: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow:
+            0 6px 24px rgba(0, 113, 227, 0.12),
+            0 0 0 1px rgba(255, 255, 255, 0.75) inset,
+            0 2px 4px rgba(255, 255, 255, 0.4) inset;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    ">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
+            <div style="width: 9px; height: 9px; border-radius: 50%; background: {status_dot}; box-shadow: 0 0 15px {status_dot}, 0 0 0 3px rgba(255,255,255,0.6) inset;"></div>
+            <span style="font-size: 15px; font-weight: 700; color: #1D1D1F;">{status_text}</span>
+        </div>
+        <p style="margin: 0; font-size: 11px; color: #86868B; font-weight: 500;">{model_name}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ========== 历史记录（居中，增强毛玻璃） ==========
+    st.markdown("""
+    <div style="
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(30px) saturate(200%);
+        -webkit-backdrop-filter: blur(30px) saturate(200%);
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin-bottom: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow:
+            0 6px 24px rgba(0, 113, 227, 0.12),
+            0 0 0 1px rgba(255, 255, 255, 0.75) inset,
+            0 2px 4px rgba(255, 255, 255, 0.4) inset;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    ">
+        <p style="margin: 0 0 12px 0; font-size: 12px; color: #86868B; font-weight: 600;">最近问答</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    try:
+        chat_history = st.session_state.rag_chain.metadata_store.get_chat_history(limit=5)
+        if chat_history:
+            for i, chat in enumerate(chat_history):
+                if st.button(f"Q{i+1}", key=f"history_{i}", help=chat['question'][:30]):
+                    st.session_state.history_chat = chat
+                    st.info(f"**问题:** {chat['question']}")
+                    st.info(f"**答案:** {chat['answer']}")
         else:
-            st.info("暂无文档可导出")
+            st.caption("暂无历史记录")
+    except Exception as e:
+        st.caption(f"历史加载失败: {str(e)}")
 
-    st.markdown("---")
-    st.markdown("### 📂 功能导航")
+    # ========== 操作按钮（竖向，统一间距） ==========
+    if st.button("导出问答记录", key="export_md", use_container_width=True):
+        try:
+            chat_history = st.session_state.rag_chain.metadata_store.get_chat_history(limit=1000)
+            if chat_history:
+                md_content = f"# 问答历史\n\n导出时间: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                for i, chat in enumerate(reversed(chat_history), 1):
+                    md_content += f"## {i}. {chat['question']}\n\n{chat['answer']}\n\n---\n\n"
+                st.download_button("⬇️ 下载", data=md_content,
+                                file_name=f"qa_{__import__('datetime').datetime.now().strftime('%Y%m%d')}.md",
+                                mime="text/markdown")
+        except Exception as e:
+            st.error(f"导出失败: {str(e)}")
 
-    page = st.radio(
-        "选择功能",
-        ["💬 问答", "📄 文档管理", "🐛 调试"],
-        label_visibility="collapsed"
-    )
+    if st.button("导出文档列表", key="export_docs", use_container_width=True):
+        try:
+            docs = st.session_state.rag_chain.metadata_store.list_documents()
+            if docs:
+                md_content = f"# 文档列表\n\n共 {len(docs)} 个文档\n\n"
+                for doc in docs:
+                    md_content += f"- {doc.file_name} ({doc.file_type}, {doc.file_size/1024:.1f}KB)\n"
+                st.download_button("⬇️ 下载", data=md_content,
+                                file_name=f"docs_{__import__('datetime').datetime.now().strftime('%Y%m%d')}.md",
+                                mime="text/markdown")
+        except Exception as e:
+            st.error(f"导出失败: {str(e)}")
+
+    if st.button("🗑️ 清空历史", key="clear_history", use_container_width=True):
+        try:
+            if st.session_state.rag_chain.metadata_store.clear_chat_history():
+                st.success("已清空")
+                st.rerun()
+        except Exception as e:
+            st.error(f"失败: {str(e)}")
 
 # 主页面
-if page == "💬 问答":
-    st.title("💬 智能问答")
+if page == "问答":
+    st.title("智能问答")
 
     st.markdown("""
     使用说明：
@@ -185,8 +649,19 @@ if page == "💬 问答":
     2. 然后在这里提问，系统会基于文档内容回答
     """)
 
+    if 'rag_chain' not in st.session_state:
+        st.warning("⚠️ 系统未初始化，请刷新页面")
+        st.stop()
+
+    try:
+        docs = st.session_state.rag_chain.metadata_store.list_documents()
+        active_docs = [d for d in docs if d.status.value == 'active']
+    except Exception as e:
+        st.error(f"❌ 获取文档列表失败: {str(e)}")
+        active_docs = []
+
     if not active_docs:
-        st.info("👉 知识库为空，请先上传文档")
+        st.info("知识库为空，请先上传文档")
     else:
         # 问答界面
         if 'messages' not in st.session_state:
@@ -199,9 +674,9 @@ if page == "💬 问答":
 
                 # 显示来源
                 if message.get('sources'):
-                    with st.expander("📚 检索来源"):
+                    with st.expander("检索来源"):
                         for source in message['sources']:
-                            st.caption(f"📄 {source['source_name']} [相似度: {source['similarity']:.2f}]")
+                            st.caption(f"{source['source_name']} [相似度: {source['similarity']:.2f}]")
 
         # 输入框
         if prompt := st.chat_input("输入你的问题..."):
@@ -215,15 +690,19 @@ if page == "💬 问答":
 
             # 生成回答
             with st.chat_message('assistant'):
-                with st.spinner('🤔 思考中...'):
-                    result = st.session_state.rag_chain.ask(prompt)
+                with st.spinner('思考中...'):
+                    try:
+                        result = st.session_state.rag_chain.ask(prompt)
+                    except Exception as e:
+                        st.error(f"❌ 生成回答失败: {str(e)}")
+                        st.stop()
 
                 st.markdown(result['answer'])
 
                 if result.get('sources'):
-                    with st.expander("📚 检索来源"):
+                    with st.expander("检索来源"):
                         for source in result['sources']:
-                            st.caption(f"📄 {source['source_name']} [相似度: {source['similarity']:.2f}]")
+                            st.caption(f"{source['source_name']} [相似度: {source['similarity']:.2f}]")
 
             # 保存到历史（内存）
             st.session_state.messages.append({
@@ -234,25 +713,28 @@ if page == "💬 问答":
             })
 
             # 保存到数据库
-            st.session_state.rag_chain.metadata_store.save_chat(
-                question=prompt,
-                answer=result['answer'],
-                sources=result.get('sources', [])
-            )
+            try:
+                st.session_state.rag_chain.metadata_store.save_chat(
+                    question=prompt,
+                    answer=result['answer'],
+                    sources=result.get('sources', [])
+                )
+            except Exception as e:
+                st.warning(f"⚠️ 保存历史记录失败: {str(e)}")
 
-elif page == "📄 文档管理":
-    st.title("📄 文档管理")
+elif page == "文档管理":
+    st.title("文档管理")
 
     st.markdown("---")
 
     # 上传区域
-    st.subheader("📤 上传文档")
+    st.subheader("上传文档")
 
     col1, col2 = st.columns(2)
 
     with col1:
         uploaded_files = st.file_uploader(
-            "选择文档（支持批量）",
+            "选择文档",
             type=['pdf', 'md', 'txt'],
             accept_multiple_files=True,
             help="支持 PDF、Markdown、纯文本，可一次选择多个文件"
@@ -269,7 +751,7 @@ elif page == "📄 文档管理":
             for f in uploaded_files:
                 st.caption(f"📄 {f.name} ({f.size / 1024:.2f} KB)")
 
-            if st.button("🚀 开始处理", type="primary"):
+            if st.button("开始处理", type="primary"):
                 # 保存文件
                 import tempfile
                 import shutil
@@ -356,33 +838,33 @@ elif page == "📄 文档管理":
     st.markdown("---")
 
     # 文档列表
-    st.subheader("📋 文档列表")
+    st.subheader("文档列表")
 
     if not docs:
         st.info("暂无文档")
     else:
         # 添加搜索和过滤功能
-        st.markdown("### 🔍 搜索和过滤")
+        st.markdown("### 搜索和过滤")
 
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
             search_query = st.text_input(
-                "🔎 搜索文档名",
+                "搜索文档名",
                 placeholder="输入关键词...",
                 label_visibility="collapsed"
             )
 
         with col2:
             filter_type = st.selectbox(
-                "📁 文档类型",
+                "文档类型",
                 ["全部", "pdf", "md", "txt"],
                 label_visibility="collapsed"
             )
 
         with col3:
             filter_status = st.selectbox(
-                "📊 状态",
+                "状态",
                 ["全部", "active", "failed"],
                 label_visibility="collapsed",
                 format_func=lambda x: {"全部": "全部", "active": "活跃", "failed": "失败"}[x]
@@ -390,7 +872,7 @@ elif page == "📄 文档管理":
 
         with col4:
             sort_by = st.selectbox(
-                "🔃 排序",
+                "排序",
                 ["时间", "大小", "名称"],
                 label_visibility="collapsed"
             )
@@ -432,35 +914,35 @@ elif page == "📄 文档管理":
         failed_docs = [d for d in filtered_docs if d.status.value == 'failed']
 
         if active_docs:
-            st.markdown("### ✅ 活跃文档")
+            st.markdown("### 活跃文档")
             for doc in active_docs:
-                with st.expander(f"📄 {doc.file_name}"):
+                with st.expander(f"{doc.file_name}"):
                     col1, col2, col3, col4 = st.columns(4)
                     col1.metric("类型", doc.file_type)
                     col2.metric("大小", f"{doc.file_size / 1024:.1f} KB")
                     col3.metric("块数", doc.chunk_count)
                     col4.metric("状态", doc.status.value)
 
-                    if st.button(f"🗑️ 删除", key=f"delete_{doc.source_id}"):
+                    if st.button(f"删除", key=f"delete_{doc.source_id}"):
                         result = st.session_state.rag_chain.delete_document(doc.source_id)
                         if result['success']:
                             st.success(result['message'])
                             st.rerun()
 
         if indexing_docs:
-            st.markdown("### ⏳ 处理中")
+            st.markdown("### 处理中")
             for doc in indexing_docs:
-                st.caption(f"📄 {doc.file_name} - 正在处理...")
+                st.caption(f"{doc.file_name} - 正在处理...")
 
         if failed_docs:
-            st.markdown("### ❌ 失败文档")
+            st.markdown("### 失败文档")
             for doc in failed_docs:
-                with st.expander(f"📄 {doc.file_name}"):
+                with st.expander(f"{doc.file_name}"):
                     st.write(f"**错误信息:** {doc.error_message}")
                     st.caption(f"Source ID: {doc.source_id}")
 
-elif page == "🐛 调试":
-    st.title("🐛 调试面板")
+elif page == "调试":
+    st.title("调试面板")
 
     st.markdown("""
     这里会显示系统的调试信息，包括：
@@ -472,7 +954,7 @@ elif page == "🐛 调试":
     st.markdown("---")
 
     # 系统配置
-    st.subheader("⚙️ 系统配置")
+    st.subheader("系统配置")
 
     st.json({
         "ollama_base_url": settings.ollama_base_url,
@@ -487,7 +969,7 @@ elif page == "🐛 调试":
     st.markdown("---")
 
     # 统计信息
-    st.subheader("📊 统计信息")
+    st.subheader("统计信息")
 
     st.json({
         "total_documents": len(docs),
@@ -499,7 +981,7 @@ elif page == "🐛 调试":
     st.markdown("---")
 
     # 日志查看
-    st.subheader("📝 日志")
+    st.subheader("日志")
 
     log_file = settings.log_file
     if os.path.exists(log_file):
