@@ -54,9 +54,9 @@ liquid_glass_css = """
         max-width: 1400px !important;
     }
 
-    /* ==================== 侧边栏按钮间距压缩 ==================== */
+    /* ==================== 侧边栏按钮间距优化 ==================== */
     .stSidebar button[kind="default"] {
-        margin-bottom: 4px !important;
+        margin-bottom: 6px !important;
     }
 
     /* ==================== 毛玻璃卡片基础 ==================== */
@@ -143,7 +143,7 @@ liquid_glass_css = """
         border: 1px solid rgba(200, 210, 230, 0.8) !important;
         color: #1D1D1F !important;
         border-radius: 14px !important;
-        padding: 10px 24px !important;
+        padding: 12px 24px !important;
         font-size: 15px !important;
         font-weight: 500 !important;
         box-shadow:
@@ -439,26 +439,26 @@ with st.sidebar:
     if 'current_page' not in st.session_state:
         st.session_state.current_page = "问答"
 
-    # ========== 标题（居中，超紧凑布局） ==========
+    # ========== 标题（居中，舒适紧凑布局） ==========
     st.markdown("""
     <div style="
         text-align: center;
-        padding: 1px 0 2px 0;
-        margin-bottom: 2px;
+        padding: 3px 0 5px 0;
+        margin-bottom: 4px;
     ">
         <h2 style="
-            margin: 0 0 6px 0;
-            font-size: 26px;
+            margin: 0 0 8px 0;
+            font-size: 27px;
             font-weight: 800;
             background: linear-gradient(135deg, #0071E3 0%, #5856D6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.5px;
         ">AI 知识库</h2>
-        <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-            <div style="width: 6px; height: 6px; border-radius: 50%; background: #34C759; box-shadow: 0 0 6px #34C759;"></div>
-            <span style="font-size: 10px; color: #86868B; font-weight: 500;">在线</span>
-            <span style="font-size: 8px; color: #AEAEB2;">qwen2.5:0.5b</span>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <div style="width: 7px; height: 7px; border-radius: 50%; background: #34C759; box-shadow: 0 0 8px #34C759;"></div>
+            <span style="font-size: 11px; color: #86868B; font-weight: 500;">在线</span>
+            <span style="font-size: 9px; color: #AEAEB2;">qwen2.5:0.5b</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -517,8 +517,8 @@ with st.sidebar:
 
     page = st.session_state.current_page
 
-    # 分隔区（超紧凑）
-    st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
+    # 分隔区（舒适紧凑）
+    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
     # ========== 统计信息（居中，增加padding） ==========
     try:
@@ -534,9 +534,9 @@ with st.sidebar:
         background: rgba(255, 255, 255, 0.45);
         backdrop-filter: blur(40px) saturate(200%);
         -webkit-backdrop-filter: blur(40px) saturate(200%);
-        border-radius: 14px;
-        padding: 10px 16px;
-        margin-bottom: 8px;
+        border-radius: 16px;
+        padding: 13px 18px;
+        margin-bottom: 10px;
         border: 1px solid rgba(255, 255, 255, 0.65);
         box-shadow:
             0 8px 32px rgba(0, 113, 227, 0.15),
@@ -546,14 +546,14 @@ with st.sidebar:
         position: relative;
         overflow: hidden;
     ">
-        <div style="display: flex; justify-content: center; gap: 32px;">
+        <div style="display: flex; justify-content: center; gap: 36px;">
             <div style="text-align: center;">
-                <p style="margin: 0; font-size: 24px; font-weight: 800; color: #0071E3;">{len(active_docs)}</p>
-                <p style="margin: 3px 0 0 0; font-size: 10px; color: #86868B; font-weight: 600;">文档</p>
+                <p style="margin: 0; font-size: 26px; font-weight: 800; color: #0071E3;">{len(active_docs)}</p>
+                <p style="margin: 4px 0 0 0; font-size: 11px; color: #86868B; font-weight: 600;">文档</p>
             </div>
             <div style="text-align: center;">
-                <p style="margin: 0; font-size: 24px; font-weight: 800; color: #5856D6;">{vector_stats['total_count']}</p>
-                <p style="margin: 3px 0 0 0; font-size: 10px; color: #86868B; font-weight: 600;">向量</p>
+                <p style="margin: 0; font-size: 26px; font-weight: 800; color: #5856D6;">{vector_stats['total_count']}</p>
+                <p style="margin: 4px 0 0 0; font-size: 11px; color: #86868B; font-weight: 600;">向量</p>
             </div>
         </div>
     </div>
