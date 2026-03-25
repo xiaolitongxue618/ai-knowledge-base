@@ -104,6 +104,69 @@ with st.sidebar:
         st.caption("暂无历史记录")
 
     st.markdown("---")
+    st.markdown("### 📤 导出")
+
+    # 导出问答历史
+    if st.button("📄 导出问答记录 (Markdown)", key="export_md"):
+        chat_history = st.session_state.rag_chain.metadata_store.get_chat_history(limit=1000)
+
+        if chat_history:
+            # 生成 Markdown 内容
+            md_content = "# 问答历史记录\n\n"
+            md_content += f"导出时间: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+            md_content += f"总计: {len(chat_history)} 条记录\n\n"
+            md_content += "---\n\n"
+
+            for i, chat in enumerate(reversed(chat_history), 1):
+                md_content += f"## 问题 {i}\n\n"
+                md_content += f"**时间:** {chat['timestamp']}\n\n"
+                md_content += f"**问题:** {chat['question']}\n\n"
+                md_content += f"**答案:** {chat['answer']}\n\n"
+
+                if chat.get('sources'):
+                    md_content += f"**来源:**\n"
+                    for source in chat['sources']:
+                        md_content += f"- {source.get('source_name', '未知')} [相似度: {source.get('similarity', 0):.2f}]\n"
+                    md_content += "\n"
+
+                md_content += "---\n\n"
+
+            # 提供下载
+            st.download_button(
+                label="⬇️ 下载 Markdown 文件",
+                data=md_content,
+                file_name=f"chat_history_{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
+                mime="text/markdown"
+            )
+        else:
+            st.info("暂无历史记录可导出")
+
+    # 导出文档列表
+    if st.button("📋 导出文档列表", key="export_docs"):
+        docs = st.session_state.rag_chain.metadata_store.list_documents()
+
+        if docs:
+            # 生成 Markdown 内容
+            md_content = "# 文档列表\n\n"
+            md_content += f"导出时间: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+            md_content += f"总计: {len(docs)} 个文档\n\n"
+            md_content += "| 文件名 | 类型 | 大小 (KB) | 状态 | 块数 |\n"
+            md_content += "|--------|------|-----------|------|------|\n"
+
+            for doc in docs:
+                md_content += f"| {doc.file_name} | {doc.file_type} | {doc.file_size / 1024:.1f} | {doc.status.value} | {doc.chunk_count} |\n"
+
+            # 提供下载
+            st.download_button(
+                label="⬇️ 下载文档列表",
+                data=md_content,
+                file_name=f"document_list_{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
+                mime="text/markdown"
+            )
+        else:
+            st.info("暂无文档可导出")
+
+    st.markdown("---")
     st.markdown("### 📂 功能导航")
 
     page = st.radio(
