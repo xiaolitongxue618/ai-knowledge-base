@@ -87,8 +87,8 @@ with st.sidebar:
         st.caption(f"共 {len(chat_history)} 条记录")
 
         # 显示最近的历史记录
-        for i, chat in enumerate(chat_history):
-            with st.expander(f"Q: {chat['question'][:40]}...", key=f"history_{i}"):
+        for chat in chat_history:
+            with st.expander(f"Q: {chat['question'][:40]}..."):
                 st.markdown(f"**问题:** {chat['question']}")
                 st.markdown(f"**答案:** {chat['answer']}")
                 st.caption(f"⏰ {chat['timestamp']}")
@@ -298,10 +298,75 @@ elif page == "📄 文档管理":
     if not docs:
         st.info("暂无文档")
     else:
+        # 添加搜索和过滤功能
+        st.markdown("### 🔍 搜索和过滤")
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            search_query = st.text_input(
+                "🔎 搜索文档名",
+                placeholder="输入关键词...",
+                label_visibility="collapsed"
+            )
+
+        with col2:
+            filter_type = st.selectbox(
+                "📁 文档类型",
+                ["全部", "pdf", "md", "txt"],
+                label_visibility="collapsed"
+            )
+
+        with col3:
+            filter_status = st.selectbox(
+                "📊 状态",
+                ["全部", "active", "failed"],
+                label_visibility="collapsed",
+                format_func=lambda x: {"全部": "全部", "active": "活跃", "failed": "失败"}[x]
+            )
+
+        with col4:
+            sort_by = st.selectbox(
+                "🔃 排序",
+                ["时间", "大小", "名称"],
+                label_visibility="collapsed"
+            )
+
+        # 应用过滤和排序
+        filtered_docs = docs.copy()
+
+        # 搜索过滤
+        if search_query:
+            filtered_docs = [d for d in filtered_docs if search_query.lower() in d.file_name.lower()]
+
+        # 类型过滤
+        if filter_type != "全部":
+            filtered_docs = [d for d in filtered_docs if d.file_type == filter_type]
+
+        # 状态过滤
+        if filter_status != "全部":
+            filtered_docs = [d for d in filtered_docs if d.status.value == filter_status]
+
+        # 排序
+        if sort_by == "大小":
+            filtered_docs = sorted(filtered_docs, key=lambda x: x.file_size, reverse=True)
+        elif sort_by == "名称":
+            filtered_docs = sorted(filtered_docs, key=lambda x: x.file_name)
+        else:  # 时间（默认就是按时间倒序）
+            pass
+
+        # 显示过滤结果
+        if filtered_docs:
+            st.caption(f"找到 {len(filtered_docs)} 个文档（共 {len(docs)} 个）")
+        else:
+            st.warning(f"没有找到匹配的文档（共 {len(docs)} 个）")
+
+        st.markdown("---")
+
         # 按状态分组显示
-        active_docs = [d for d in docs if d.status.value == 'active']
-        indexing_docs = [d for d in docs if d.status.value == 'indexing']
-        failed_docs = [d for d in docs if d.status.value == 'failed']
+        active_docs = [d for d in filtered_docs if d.status.value == 'active']
+        indexing_docs = [d for d in filtered_docs if d.status.value == 'indexing']
+        failed_docs = [d for d in filtered_docs if d.status.value == 'failed']
 
         if active_docs:
             st.markdown("### ✅ 活跃文档")
