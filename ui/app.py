@@ -586,24 +586,15 @@ with st.sidebar:
         text-align: center;
         position: relative;
         overflow: hidden;
-    ">
-        <p style="margin: 0 0 12px 0; font-size: 12px; color: #86868B; font-weight: 600;">最近问答</p>
+        cursor: pointer;
+    " onclick="document.querySelector('[data-testid=\"stSidebarNavIcon\"]').click()">
+        <p style="margin: 0; font-size: 14px; color: #0071E3; font-weight: 600;">📜 查看历史问答</p>
     </div>
     """, unsafe_allow_html=True)
 
-    try:
-        chat_history = st.session_state.rag_chain.metadata_store.get_chat_history(limit=5)
-        if chat_history:
-            for i, chat in enumerate(chat_history):
-                if st.button(f"Q{i+1}", key=f"history_{i}", help=chat['question'][:30]):
-                    # 设置历史记录到session，在主页面显示
-                    st.session_state.history_chat = chat
-                    st.session_state.show_history = True
-                    st.rerun()
-        else:
-            st.caption("暂无历史记录")
-    except Exception as e:
-        st.caption(f"历史加载失败: {str(e)}")
+    if st.button("查看历史", key="view_history", use_container_width=True):
+        st.session_state.show_all_history = True
+        st.rerun()
 
     # ========== 操作按钮（竖向，统一间距） ==========
     if st.button("导出问答记录", key="export_md", use_container_width=True):
@@ -668,8 +659,89 @@ if page == "问答":
         if 'messages' not in st.session_state:
             st.session_state.messages = []
 
-        # 显示从侧边栏选择的历史问答
-        if st.session_state.get('show_history', False) and st.session_state.get('history_chat'):
+        # ========== 显示所有历史问答（新功能） ==========
+        if st.session_state.get('show_all_history', False):
+            st.markdown("---")
+            st.markdown("### 📜 历史问答记录")
+
+            # 筛选按钮
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                if st.button("📅 全部", key="filter_all", use_container_width=True):
+                    st.session_state.history_filter = "all"
+                    st.rerun()
+            with col2:
+                if st.button("📅 今天", key="filter_today", use_container_width=True):
+                    st.session_state.history_filter = "today"
+                    st.rerun()
+            with col3:
+                if st.button("📅 本周", key="filter_week", use_container_width=True):
+                    st.session_state.history_filter = "week"
+                    st.rerun()
+            with col4:
+                search_keyword = st.text_input("🔍 搜索关键词", placeholder="输入关键词...")
+
+            try:
+                # 获取所有历史问答
+                all_history = st.session_state.rag_chain.metadata_store.get_chat_history(limit=1000)
+
+                # 筛选逻辑
+                import datetime
+                from datetime import timedelta
+
+                filtered_history = []
+                today = datetime.datetime.now().date()
+                week_ago = today - datetime.timedelta(days=7)
+
+                for chat in all_history:
+                    # 筛选
+                    if st.session_state.get('history_filter') == 'today':
+                        chat_date = datetime.datetime.fromisoformat(chat['timestamp']).date()
+                        if chat_date != today:
+                            continue
+                    elif st.session_state.get('history_filter') == 'week':
+                        chat_date = datetime.datetime.fromisoformat(chat['timestamp']).date()
+                        if chat_date < week_ago:
+                            continue
+
+                    # 关键词搜索
+                    if search_keyword:
+                        if search_keyword.lower() not in chat['question'].lower():
+                            continue
+
+                    filtered_history.append(chat)
+
+                if not filtered_history:
+                    st.info("没有找到匹配的历史记录")
+                    if st.button("返回"):
+                        st.session_state.show_all_history = False
+                        st.rerun()
+                else:
+                    # 显示历史问答列表
+                    for idx, chat in enumerate(filtered_history):
+                        with st.expander(
+                            f"**Q:** {chat['question'][:60]}{'...' if len(chat['question']) > 60 else ''}",
+                            expanded=False,
+                            key=f"history_item_{idx}"
+                        ):
+                            # 显示问题
+                            st.markdown(f"**问题：** {chat['question']}")
+                            st.markdown(f"**时间：** {chat['timestamp']}")
+                            st.markdown("---")
+                            st.markdown(f"**答案：** {chat['answer']}")
+
+            except Exception as e:
+                st.error(f"加载历史记录失败: {str(e)}")
+
+            # 返回按钮
+            if st.button("← 返回问答", use_container_width=True):
+                st.session_state.show_all_history = False
+                st.rerun()
+
+            st.markdown("---")
+
+        # 显示当前选中的单个历史问答
+        elif st.session_state.get('show_history', False) and st.session_state.get('history_chat'):
             chat = st.session_state.history_chat
 
             st.markdown("---")
