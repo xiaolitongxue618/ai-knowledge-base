@@ -427,22 +427,27 @@ with st.sidebar:
     if 'current_page' not in st.session_state:
         st.session_state.current_page = "问答"
 
-    # ========== 标题（居中，减少上边距） ==========
+    # ========== 标题（居中，紧凑布局） ==========
     st.markdown("""
     <div style="
         text-align: center;
-        padding: 8px 0 16px 0;
-        margin-bottom: 12px;
+        padding: 4px 0 8px 0;
+        margin-bottom: 8px;
     ">
         <h2 style="
-            margin: 0;
-            font-size: 32px;
+            margin: 0 0 12px 0;
+            font-size: 30px;
             font-weight: 800;
             background: linear-gradient(135deg, #0071E3 0%, #5856D6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.5px;
         ">AI 知识库</h2>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <div style="width: 8px; height: 8px; border-radius: 50%; background: #34C759; box-shadow: 0 0 10px #34C759;"></div>
+            <span style="font-size: 12px; color: #86868B; font-weight: 500;">在线</span>
+            <span style="font-size: 10px; color: #AEAEB2;">qwen2.5:0.5b</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -539,36 +544,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # ========== 系统状态（居中，更紧凑） ==========
-    status_dot = "#34C759" if st.session_state.get('ollama_connected') else "#FF3B30"
-    status_text = "在线" if st.session_state.get('ollama_connected') else "离线"
-    model_name = st.session_state.get('model', 'qwen2.5:0.5b')
-
-    st.markdown(f"""
-    <div style="
-        background: rgba(255, 255, 255, 0.4);
-        backdrop-filter: blur(35px) saturate(200%);
-        -webkit-backdrop-filter: blur(35px) saturate(200%);
-        border-radius: 16px;
-        padding: 14px 18px;
-        margin-bottom: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        box-shadow:
-            0 6px 24px rgba(0, 113, 227, 0.12),
-            0 0 0 1px rgba(255, 255, 255, 0.75) inset,
-            0 2px 4px rgba(255, 255, 255, 0.4) inset;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-    ">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
-            <div style="width: 9px; height: 9px; border-radius: 50%; background: {status_dot}; box-shadow: 0 0 15px {status_dot}, 0 0 0 3px rgba(255,255,255,0.6) inset;"></div>
-            <span style="font-size: 15px; font-weight: 700; color: #1D1D1F;">{status_text}</span>
-        </div>
-        <p style="margin: 0; font-size: 11px; color: #86868B; font-weight: 500;">{model_name}</p>
-    </div>
-    """, unsafe_allow_html=True)
-
     # ========== 历史记录按钮（居中，增强毛玻璃） ==========
     if st.button("📜 查看历史问答", key="view_history", use_container_width=True):
         st.session_state.show_all_history = True
@@ -613,11 +588,11 @@ with st.sidebar:
 if page == "问答":
     st.title("智能问答")
 
-    st.markdown("""
-    使用说明：
-    1. 先在"文档管理"页面上传文档
-    2. 然后在这里提问，系统会基于文档内容回答
-    """)
+    with st.expander("📖 使用说明", expanded=False):
+        st.markdown("""
+        1. 先在"文档管理"页面上传文档
+        2. 然后在这里提问，系统会基于文档内容回答
+        """)
 
     if 'rag_chain' not in st.session_state:
         st.warning("⚠️ 系统未初始化，请刷新页面")
@@ -639,11 +614,10 @@ if page == "问答":
 
         # ========== 显示所有历史问答（新功能） ==========
         if st.session_state.get('show_all_history', False):
-            st.markdown("---")
             st.markdown("### 📜 历史问答记录")
 
-            # 筛选按钮
-            col1, col2, col3, col4 = st.columns(4)
+            # 筛选按钮 - 3列布局
+            col1, col2, col3 = st.columns(3)
             with col1:
                 if st.button("📅 全部", key="filter_all", use_container_width=True):
                     st.session_state.history_filter = "all"
@@ -656,8 +630,9 @@ if page == "问答":
                 if st.button("📅 本周", key="filter_week", use_container_width=True):
                     st.session_state.history_filter = "week"
                     st.rerun()
-            with col4:
-                search_keyword = st.text_input("🔍 搜索关键词", placeholder="输入关键词...")
+
+            # 搜索框独立一行
+            search_keyword = st.text_input("🔍 搜索历史记录", placeholder="输入关键词搜索...", key="search_history")
 
             try:
                 # 获取所有历史问答
