@@ -47,6 +47,13 @@ liquid_glass_css = """
         100% { background-position: 0% 50%; }
     }
 
+    /* ==================== 主页面顶部间距优化 ==================== */
+    .main .block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 1400px !important;
+    }
+
     /* ==================== 毛玻璃卡片基础 ==================== */
     .glass-card {
         background: rgba(255, 255, 255, 0.6) !important;
@@ -427,26 +434,26 @@ with st.sidebar:
     if 'current_page' not in st.session_state:
         st.session_state.current_page = "问答"
 
-    # ========== 标题（居中，紧凑布局） ==========
+    # ========== 标题（居中，极简紧凑布局） ==========
     st.markdown("""
     <div style="
         text-align: center;
-        padding: 4px 0 8px 0;
-        margin-bottom: 8px;
+        padding: 2px 0 4px 0;
+        margin-bottom: 4px;
     ">
         <h2 style="
-            margin: 0 0 12px 0;
-            font-size: 30px;
+            margin: 0 0 8px 0;
+            font-size: 28px;
             font-weight: 800;
             background: linear-gradient(135deg, #0071E3 0%, #5856D6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.5px;
         ">AI 知识库</h2>
-        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <div style="width: 8px; height: 8px; border-radius: 50%; background: #34C759; box-shadow: 0 0 10px #34C759;"></div>
-            <span style="font-size: 12px; color: #86868B; font-weight: 500;">在线</span>
-            <span style="font-size: 10px; color: #AEAEB2;">qwen2.5:0.5b</span>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <div style="width: 7px; height: 7px; border-radius: 50%; background: #34C759; box-shadow: 0 0 8px #34C759;"></div>
+            <span style="font-size: 11px; color: #86868B; font-weight: 500;">在线</span>
+            <span style="font-size: 9px; color: #AEAEB2;">qwen2.5:0.5b</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -502,8 +509,8 @@ with st.sidebar:
 
     page = st.session_state.current_page
 
-    # 分隔区（更大的间距）
-    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+    # 分隔区（紧凑间距）
+    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
     # ========== 统计信息（居中，增加padding） ==========
     try:
@@ -519,9 +526,9 @@ with st.sidebar:
         background: rgba(255, 255, 255, 0.45);
         backdrop-filter: blur(40px) saturate(200%);
         -webkit-backdrop-filter: blur(40px) saturate(200%);
-        border-radius: 18px;
-        padding: 22px 26px;
-        margin-bottom: 18px;
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin-bottom: 12px;
         border: 1px solid rgba(255, 255, 255, 0.65);
         box-shadow:
             0 8px 32px rgba(0, 113, 227, 0.15),
@@ -531,14 +538,14 @@ with st.sidebar:
         position: relative;
         overflow: hidden;
     ">
-        <div style="display: flex; justify-content: center; gap: 52px;">
+        <div style="display: flex; justify-content: center; gap: 40px;">
             <div style="text-align: center;">
-                <p style="margin: 0; font-size: 32px; font-weight: 800; color: #0071E3;">{len(active_docs)}</p>
-                <p style="margin: 6px 0 0 0; font-size: 12px; color: #86868B; font-weight: 600;">文档</p>
+                <p style="margin: 0; font-size: 28px; font-weight: 800; color: #0071E3;">{len(active_docs)}</p>
+                <p style="margin: 4px 0 0 0; font-size: 11px; color: #86868B; font-weight: 600;">文档</p>
             </div>
             <div style="text-align: center;">
-                <p style="margin: 0; font-size: 32px; font-weight: 800; color: #5856D6;">{vector_stats['total_count']}</p>
-                <p style="margin: 6px 0 0 0; font-size: 12px; color: #86868B; font-weight: 600;">向量</p>
+                <p style="margin: 0; font-size: 28px; font-weight: 800; color: #5856D6;">{vector_stats['total_count']}</p>
+                <p style="margin: 4px 0 0 0; font-size: 11px; color: #86868B; font-weight: 600;">向量</p>
             </div>
         </div>
     </div>
