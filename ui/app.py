@@ -427,12 +427,12 @@ with st.sidebar:
     if 'current_page' not in st.session_state:
         st.session_state.current_page = "问答"
 
-    # ========== 标题（居中，留白充足） ==========
+    # ========== 标题（居中，减少上边距） ==========
     st.markdown("""
     <div style="
         text-align: center;
-        padding: 24px 0 32px 0;
-        margin-bottom: 24px;
+        padding: 8px 0 16px 0;
+        margin-bottom: 12px;
     ">
         <h2 style="
             margin: 0;
@@ -569,30 +569,8 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # ========== 历史记录（居中，增强毛玻璃） ==========
-    st.markdown("""
-    <div style="
-        background: rgba(255, 255, 255, 0.4);
-        backdrop-filter: blur(30px) saturate(200%);
-        -webkit-backdrop-filter: blur(30px) saturate(200%);
-        border-radius: 16px;
-        padding: 16px 20px;
-        margin-bottom: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        box-shadow:
-            0 6px 24px rgba(0, 113, 227, 0.12),
-            0 0 0 1px rgba(255, 255, 255, 0.75) inset,
-            0 2px 4px rgba(255, 255, 255, 0.4) inset;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-        cursor: pointer;
-    " onclick="document.querySelector('[data-testid=\"stSidebarNavIcon\"]').click()">
-        <p style="margin: 0; font-size: 14px; color: #0071E3; font-weight: 600;">📜 查看历史问答</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    if st.button("查看历史", key="view_history", use_container_width=True):
+    # ========== 历史记录按钮（居中，增强毛玻璃） ==========
+    if st.button("📜 查看历史问答", key="view_history", use_container_width=True):
         st.session_state.show_all_history = True
         st.rerun()
 
