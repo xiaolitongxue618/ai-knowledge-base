@@ -596,14 +596,6 @@ with st.sidebar:
 
 # 主页面
 if page == "问答":
-    st.title("智能问答")
-
-    with st.expander("📖 使用说明", expanded=False):
-        st.markdown("""
-        1. 先在"文档管理"页面上传文档
-        2. 然后在这里提问，系统会基于文档内容回答
-        """)
-
     if 'rag_chain' not in st.session_state:
         st.warning("⚠️ 系统未初始化，请刷新页面")
         st.stop()
@@ -618,18 +610,18 @@ if page == "问答":
     if not active_docs:
         st.info("知识库为空，请先上传文档")
     else:
-        # 问答界面
+        # 初始化messages
         if 'messages' not in st.session_state:
             st.session_state.messages = []
 
-        # ========== 显示所有历史问答（新功能） ==========
+        # ========== 历史记录模式（独立页面，不显示标题和输入框） ==========
         if st.session_state.get('show_all_history', False):
             st.markdown("### 📜 历史问答记录")
 
             # 筛选按钮 - 3列布局
             col1, col2, col3 = st.columns(3)
             with col1:
-                if st.button("📅 全部", key="filter_all", use_container_width=True):
+                if st.button("📋 全部", key="filter_all", use_container_width=True):
                     st.session_state.history_filter = "all"
                     st.rerun()
             with col2:
@@ -637,7 +629,7 @@ if page == "问答":
                     st.session_state.history_filter = "today"
                     st.rerun()
             with col3:
-                if st.button("📅 本周", key="filter_week", use_container_width=True):
+                if st.button("📆 本周", key="filter_week", use_container_width=True):
                     st.session_state.history_filter = "week"
                     st.rerun()
 
@@ -703,80 +695,70 @@ if page == "问答":
 
             st.markdown("---")
 
-        # 显示当前选中的单个历史问答
-        elif st.session_state.get('show_history', False) and st.session_state.get('history_chat'):
-            chat = st.session_state.history_chat
+        # ========== 正常问答模式 ==========
+        else:
+            st.title("智能问答")
 
-            st.markdown("---")
-            st.markdown(f"### 📜 历史问答")
+            with st.expander("📖 使用说明", expanded=False):
+                st.markdown("""
+                1. 先在"文档管理"页面上传文档
+                2. 然后在这里提问，系统会基于文档内容回答
+                """)
 
-            # 显示问题
-            with st.chat_message('user'):
-                st.markdown(chat['question'])
+            # 显示历史消息
+            for message in st.session_state.messages:
+                with st.chat_message(message['role']):
+                    st.markdown(message['content'])
 
-            # 显示答案
-            with st.chat_message('assistant'):
-                st.markdown(chat['answer'])
+                    # 显示来源
+                    if message.get('sources'):
+                        with st.expander("检索来源"):
+                            for source in message['sources']:
+                                st.caption(f"{source['source_name']} [相似度: {source['similarity']:.2f}]")
 
-            # 清除标记
-            st.session_state.show_history = False
-            st.session_state.history_chat = None
-            st.markdown("---")
+            # 输入框
+            if prompt := st.chat_input("输入你的问题..."):
+                # 显示用户消息
+                st.session_state.messages.append({
+                    'role': 'user',
+                    'content': prompt
+                })
+                with st.chat_message('user'):
+                    st.markdown(prompt)
 
-        # 显示历史消息
-        for message in st.session_state.messages:
-            with st.chat_message(message['role']):
-                st.markdown(message['content'])
+                # 生成回答
+                with st.chat_message('assistant'):
+                    with st.spinner('思考中...'):
+                        try:
+                            result = st.session_state.rag_chain.ask(prompt)
+                        except Exception as e:
+                            st.error(f"❌ 生成回答失败: {str(e)}")
+                            st.stop()
 
-                # 显示来源
-                if message.get('sources'):
-                    with st.expander("检索来源"):
-                        for source in message['sources']:
-                            st.caption(f"{source['source_name']} [相似度: {source['similarity']:.2f}]")
+                    st.markdown(result['answer'])
 
-        # 输入框
-        if prompt := st.chat_input("输入你的问题..."):
-            # 显示用户消息
-            st.session_state.messages.append({
-                'role': 'user',
-                'content': prompt
-            })
-            with st.chat_message('user'):
-                st.markdown(prompt)
+                    if result.get('sources'):
+                        with st.expander("检索来源"):
+                            for source in result['sources']:
+                                st.caption(f"{source['source_name']} [相似度: {source['similarity']:.2f}]")
 
-            # 生成回答
-            with st.chat_message('assistant'):
-                with st.spinner('思考中...'):
-                    try:
-                        result = st.session_state.rag_chain.ask(prompt)
-                    except Exception as e:
-                        st.error(f"❌ 生成回答失败: {str(e)}")
-                        st.stop()
+                # 保存到历史（内存）
+                st.session_state.messages.append({
+                    'role': 'assistant',
+                    'content': result['answer'],
+                    'sources': result.get('sources', []),
+                    'metadata': result.get('metadata', {})
+                })
 
-                st.markdown(result['answer'])
-
-                if result.get('sources'):
-                    with st.expander("检索来源"):
-                        for source in result['sources']:
-                            st.caption(f"{source['source_name']} [相似度: {source['similarity']:.2f}]")
-
-            # 保存到历史（内存）
-            st.session_state.messages.append({
-                'role': 'assistant',
-                'content': result['answer'],
-                'sources': result.get('sources', []),
-                'metadata': result.get('metadata', {})
-            })
-
-            # 保存到数据库
-            try:
-                st.session_state.rag_chain.metadata_store.save_chat(
-                    question=prompt,
-                    answer=result['answer'],
-                    sources=result.get('sources', [])
-                )
-            except Exception as e:
-                st.warning(f"⚠️ 保存历史记录失败: {str(e)}")
+                # 保存到数据库
+                try:
+                    st.session_state.rag_chain.metadata_store.save_chat(
+                        question=prompt,
+                        answer=result['answer'],
+                        sources=result.get('sources', [])
+                    )
+                except Exception as e:
+                    st.warning(f"⚠️ 保存历史记录失败: {str(e)}")
 
 elif page == "文档管理":
     st.title("文档管理")
