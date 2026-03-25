@@ -155,16 +155,23 @@ elif page == "📄 文档管理":
     col1, col2 = st.columns(2)
 
     with col1:
-        uploaded_file = st.file_uploader(
-            "选择文档",
+        uploaded_files = st.file_uploader(
+            "选择文档（支持批量）",
             type=['pdf', 'md', 'txt'],
-            help="支持 PDF、Markdown、纯文本"
+            accept_multiple_files=True,
+            help="支持 PDF、Markdown、纯文本，可一次选择多个文件"
         )
 
     with col2:
-        if uploaded_file:
-            st.info(f"已选择: {uploaded_file.name}")
-            st.caption(f"大小: {uploaded_file.size / 1024:.2f} KB")
+        if uploaded_files:
+            st.info(f"已选择 {len(uploaded_files)} 个文件")
+
+            # 显示文件列表
+            total_size = sum(f.size for f in uploaded_files)
+            st.caption(f"总大小: {total_size / 1024:.2f} KB")
+
+            for f in uploaded_files:
+                st.caption(f"📄 {f.name} ({f.size / 1024:.2f} KB)")
 
             if st.button("🚀 开始处理", type="primary"):
                 # 保存文件
@@ -173,22 +180,82 @@ elif page == "📄 文档管理":
 
                 # 创建临时目录
                 temp_dir = tempfile.mkdtemp()
-                file_path = os.path.join(temp_dir, uploaded_file.name)
 
-                with open(file_path, 'wb') as f:
-                    f.write(uploaded_file.getbuffer())
+                # 处理结果统计
+                success_count = 0
+                failed_count = 0
+                results = []
 
-                # 处理文档
-                with st.spinner("正在处理文档..."):
-                    result = st.session_state.rag_chain.add_document(file_path)
+                # 创建进度条
+                progress_bar = st.progress(0, text="准备处理...")
 
-                if result['success']:
-                    st.success(f"✅ {result['message']}")
-                else:
-                    st.error(f"❌ {result['message']}")
+                for i, uploaded_file in enumerate(uploaded_files):
+                    # 更新进度
+                    progress = (i) / len(uploaded_files)
+                    progress_bar.progress(progress, text=f"正在处理: {uploaded_file.name} ({i+1}/{len(uploaded_files)})")
+
+                    # 保存文件
+                    file_path = os.path.join(temp_dir, uploaded_file.name)
+
+                    try:
+                        with open(file_path, 'wb') as f:
+                            f.write(uploaded_file.getbuffer())
+
+                        # 处理文档
+                        result = st.session_state.rag_chain.add_document(file_path)
+
+                        if result['success']:
+                            success_count += 1
+                            results.append({
+                                'file': uploaded_file.name,
+                                'status': 'success',
+                                'message': result['message'],
+                                'chunks': result.get('chunk_count', 0)
+                            })
+                        else:
+                            failed_count += 1
+                            results.append({
+                                'file': uploaded_file.name,
+                                'status': 'failed',
+                                'message': result['message']
+                            })
+
+                    except Exception as e:
+                        failed_count += 1
+                        results.append({
+                            'file': uploaded_file.name,
+                            'status': 'error',
+                            'message': f"处理异常: {str(e)}"
+                        })
+
+                # 完成进度
+                progress_bar.progress(1.0, text="处理完成！")
+
+                # 显示结果汇总
+                st.markdown("---")
+                st.subheader("📊 处理结果汇总")
+
+                col1, col2, col3 = st.columns(3)
+                col1.metric("✅ 成功", success_count)
+                col2.metric("❌ 失败", failed_count)
+                col3.metric("📄 总计", len(uploaded_files))
+
+                # 显示详细结果
+                st.markdown("---")
+                for result in results:
+                    if result['status'] == 'success':
+                        st.success(f"✅ {result['file']}")
+                        st.caption(f"   {result['message']}")
+                    else:
+                        st.error(f"❌ {result['file']}")
+                        st.caption(f"   {result['message']}")
 
                 # 清理临时文件
                 shutil.rmtree(temp_dir)
+
+                # 刷新页面
+                if success_count > 0:
+                    st.rerun()
 
     st.markdown("---")
 
