@@ -49,7 +49,7 @@ liquid_glass_css = """
 
     /* ==================== 主页面顶部间距优化 ==================== */
     .main .block-container {
-        padding-top: 1.5rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 2rem !important;
         max-width: 1400px !important;
     }
@@ -473,6 +473,7 @@ with st.sidebar:
 
     if st.button("💬 问答", key="nav_chat", use_container_width=True):
         st.session_state.current_page = "问答"
+        st.session_state.show_all_history = False  # 重置历史记录显示状态
         st.rerun()
 
     # 文档管理按钮
@@ -489,6 +490,7 @@ with st.sidebar:
 
     if st.button("📄 文档管理", key="nav_docs", use_container_width=True):
         st.session_state.current_page = "文档管理"
+        st.session_state.show_all_history = False  # 重置历史记录显示状态
         st.rerun()
 
     # 调试按钮
@@ -505,6 +507,7 @@ with st.sidebar:
 
     if st.button("🐛 调试", key="nav_debug", use_container_width=True):
         st.session_state.current_page = "调试"
+        st.session_state.show_all_history = False  # 重置历史记录显示状态
         st.rerun()
 
     page = st.session_state.current_page
