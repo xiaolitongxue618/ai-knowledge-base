@@ -596,9 +596,10 @@ with st.sidebar:
         if chat_history:
             for i, chat in enumerate(chat_history):
                 if st.button(f"Q{i+1}", key=f"history_{i}", help=chat['question'][:30]):
+                    # 设置历史记录到session，在主页面显示
                     st.session_state.history_chat = chat
-                    st.info(f"**问题:** {chat['question']}")
-                    st.info(f"**答案:** {chat['answer']}")
+                    st.session_state.show_history = True
+                    st.rerun()
         else:
             st.caption("暂无历史记录")
     except Exception as e:
@@ -666,6 +667,26 @@ if page == "问答":
         # 问答界面
         if 'messages' not in st.session_state:
             st.session_state.messages = []
+
+        # 显示从侧边栏选择的历史问答
+        if st.session_state.get('show_history', False) and st.session_state.get('history_chat'):
+            chat = st.session_state.history_chat
+
+            st.markdown("---")
+            st.markdown(f"### 📜 历史问答")
+
+            # 显示问题
+            with st.chat_message('user'):
+                st.markdown(chat['question'])
+
+            # 显示答案
+            with st.chat_message('assistant'):
+                st.markdown(chat['answer'])
+
+            # 清除标记
+            st.session_state.show_history = False
+            st.session_state.history_chat = None
+            st.markdown("---")
 
         # 显示历史消息
         for message in st.session_state.messages:
