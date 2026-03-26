@@ -231,32 +231,6 @@ class KnowledgeGraph:
             st.info("📊 暂无图谱数据")
             return
 
-        # 检查并安装中文字体
-        check_and_install_chinese_font()
-
-        # 设置中文字体
-        import matplotlib.font_manager as fm
-        import platform
-
-        # 尝试设置中文字体
-        system = platform.system()
-        if system == 'Linux':
-            # Linux系统，尝试常见中文字体
-            chinese_fonts = ['SimHei', 'WenQuanYi Micro Hei', 'Noto Sans CJK', 'Droid Sans Fallback']
-            for font in chinese_fonts:
-                try:
-                    plt.rcParams['font.sans-serif'] = [font]
-                    plt.rcParams['axes.unicode_minus'] = False
-                    break
-                except:
-                    continue
-        elif system == 'Darwin':  # macOS
-            plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'Heiti TC']
-            plt.rcParams['axes.unicode_minus'] = False
-        elif system == 'Windows':
-            plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei']
-            plt.rcParams['axes.unicode_minus'] = False
-
         # 创建图形
         plt.figure(figsize=(14, 10))
 
@@ -300,18 +274,30 @@ class KnowledgeGraph:
             width=1.5
         )
 
-        # 绘制节点标签
-        nx.draw_networkx_labels(
-            G, pos,
-            font_size=11,
-            font_weight='bold',
-            bbox=dict(
-                boxstyle='round,pad=0.5',
-                facecolor='white',
-                edgecolor='gray',
-                alpha=0.9
-            )
-        )
+        # 绘制节点标签（中文实体名，英文类型图标）
+        for node, (x, y) in pos.items():
+            node_type = G.nodes[node].get('type', '未知')
+
+            # 类型图标映射
+            type_emoji = {
+                '人物': '👤',
+                '地点': '📍',
+                '组织': '🏢',
+                '概念': '💡',
+                '时间': '🕐',
+                '产品': '📦',
+                '技术': '⚙️',
+                '未知': '❓'
+            }
+
+            emoji = type_emoji.get(node_type, '📌')
+
+            # 显示：emoji + 节点名
+            label_text = f"{emoji}\n{node}"
+            plt.text(x, y, label_text, fontsize=10, fontweight='bold',
+                    ha='center', va='center',
+                    bbox=dict(boxstyle='round,pad=0.5', facecolor='white',
+                              edgecolor='gray', alpha=0.9))
 
         # 绘制边标签（关系）
         edge_labels = nx.get_edge_attributes(G, 'relation')
