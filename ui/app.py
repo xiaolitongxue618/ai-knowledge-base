@@ -15,6 +15,7 @@ from src.llm.llm_client import OllamaClient
 from src.rag import RAGChain
 from src.config import settings
 from src.utils.logger import setup_logger
+from src.graph import KnowledgeGraph
 
 # 页面配置
 st.set_page_config(
@@ -512,6 +513,23 @@ with st.sidebar:
 
     if st.button("🐛 调试", key="nav_debug", use_container_width=True):
         st.session_state.current_page = "调试"
+        st.session_state.show_all_history = False  # 重置历史记录显示状态
+        st.rerun()
+
+    # 知识图谱按钮
+    if st.session_state.current_page == "知识图谱":
+        st.markdown("""
+        <style>
+        button[data-key="nav_graph"] {
+            background: linear-gradient(135deg, #0071E3 0%, #5856D6 100%) !important;
+            color: white !important;
+            font-weight: 700 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+    if st.button("🕸️ 知识图谱", key="nav_graph", use_container_width=True):
+        st.session_state.current_page = "知识图谱"
         st.session_state.show_all_history = False  # 重置历史记录显示状态
         st.rerun()
 
@@ -1035,3 +1053,153 @@ elif page == "调试":
                 st.text(line)
     else:
         st.info(f"日志文件不存在: {log_file}")
+
+elif page == "知识图谱":
+    st.title("🕸️ 知识图谱")
+
+    st.markdown("""
+    ### 📊 可视化您知识库中的实体关系
+
+    知识图谱会从您的文档中自动提取实体（人物、地点、组织、概念等）和它们之间的关系，生成可视化的网络图。
+    """)
+
+    st.markdown("---")
+
+    # 初始化知识图谱
+    if 'kg' not in st.session_state:
+        try:
+            st.session_state.kg = KnowledgeGraph(st.session_state.rag_chain.llm_client)
+        except Exception as e:
+            st.error(f"❌ 初始化知识图谱失败: {str(e)}")
+            st.stop()
+
+    # 获取文档列表
+    try:
+        docs = st.session_state.rag_chain.metadata_store.list_documents()
+        active_docs = [d for d in docs if d.status.value == 'active']
+    except Exception as e:
+        st.error(f"❌ 获取文档列表失败: {str(e)}")
+        active_docs = []
+
+    if not active_docs:
+        st.info("📚 知识库为空，请先在\"文档管理\"页面上传文档")
+    else:
+        # 侧边栏控制面板
+        with st.sidebar:
+            st.markdown("### ⚙️ 图谱设置")
+
+            # 选择文档数量
+            max_docs = st.slider(
+                "分析文档数量",
+                min_value=1,
+                max_value=min(len(active_docs), 10),
+                value=3,
+                help="同时分析的文档数量，越多越详细但速度越慢"
+            )
+
+            # 最大实体数
+            max_entities = st.slider(
+                "每文档最大实体数",
+                min_value=5,
+                max_value=30,
+                value=15,
+                help="从每个文档中提取的最大实体数量"
+            )
+
+            st.markdown("---")
+
+            # 生成按钮
+            generate_btn = st.button("🚀 生成知识图谱", type="primary", use_container_width=True)
+
+        # 生成图谱
+        if generate_btn:
+            st.info(f"📊 正在从 {min(max_docs, len(active_docs))} 个文档中提取实体和关系...")
+
+            try:
+                # 生成图谱
+                G = st.session_state.kg.generate_from_documents(
+                    active_docs,
+                    max_docs=max_docs
+                )
+
+                # 保存到session
+                st.session_state.current_graph = G
+
+                # 显示成功消息
+                st.success(f"✅ 成功生成知识图谱！")
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"❌ 生成知识图谱失败: {str(e)}")
+                st.exception(e)
+
+        # 显示图谱
+        if 'current_graph' in st.session_state:
+            G = st.session_state.current_graph
+
+            # 统计信息
+            stats = st.session_state.kg.get_graph_statistics(G)
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("实体数量", stats['nodes'])
+            with col2:
+                st.metric("关系数量", stats['edges'])
+            with col3:
+                st.metric("图谱密度", f"{stats['density']:.3f}")
+            with col4:
+                st.metric("平均度数", f"{stats['avg_degree']:.2f}")
+
+            st.markdown("---")
+
+            # 实体类型分布
+            if stats['entity_types']:
+                st.subheader("📋 实体类型分布")
+                for entity_type, count in stats['entity_types'].items():
+                    st.markdown(f"- **{entity_type}**: {count} 个")
+
+                st.markdown("---")
+
+            # 可视化图谱
+            st.subheader("🕸️ 知识图谱可视化")
+            st.session_state.kg.visualize_graph(G)
+
+            st.markdown("---")
+
+            # 导出功能
+            st.subheader("📥 导出数据")
+
+            col1, col2 = st.columns(2)
+            with col1:
+                # 导出为JSON
+                json_data = st.session_state.kg.export_graph_data(G)
+                st.download_button(
+                    label="📄 下载 JSON",
+                    data=json_data,
+                    file_name=f"knowledge_graph_{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                    mime="application/json",
+                    use_container_width=True
+                )
+
+            with col2:
+                # 清除图谱
+                if st.button("🗑️ 清除图谱", use_container_width=True):
+                    del st.session_state.current_graph
+                    st.success("✅ 已清除图谱")
+                    st.rerun()
+
+        else:
+            # 显示提示
+            st.markdown("""
+            ### 🚀 开始使用
+
+            1. 在左侧设置面板调整参数
+            2. 点击 **"生成知识图谱"** 按钮
+            3. 等待系统分析文档并生成图谱
+            4. 查看可视化结果和统计信息
+
+            **提示**：
+            - 首次使用建议选择 3-5 个文档
+            - 文档越多，图谱越复杂
+            - 可以随时重新生成新的图谱
+            """)
