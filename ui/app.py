@@ -1076,21 +1076,33 @@ elif page == "知识图谱":
     if not active_docs:
         st.info("📚 知识库为空，请先在\"文档管理\"页面上传文档")
     else:
-        # 控制面板（在主页面，不是sidebar）
-        st.subheader("⚙️ 图谱设置")
+        # 控制面板
+        st.subheader("⚙️ 选择文档并设置参数")
 
+        # 文档选择
+        doc_options = [f"{doc.file_name} ({doc.file_type})" for doc in active_docs]
+        selected_doc_indices = st.multiselect(
+            "📄 选择要分析的文档",
+            options=list(range(len(active_docs))),
+            format_func=lambda i: doc_options[i],
+            default=list(range(min(3, len(active_docs)))),
+            help="选择您想要分析的文档，知识图谱将从这些文档中提取实体和关系"
+        )
+
+        if not selected_doc_indices:
+            st.warning("⚠️ 请至少选择一个文档")
+            st.stop()
+
+        # 显示已选择的文档
+        st.markdown(f"**已选择 {len(selected_doc_indices)} 个文档：**")
+        for idx in selected_doc_indices:
+            st.markdown(f"- {doc_options[idx]}")
+
+        st.markdown("---")
+
+        # 参数设置
         col1, col2 = st.columns(2)
         with col1:
-            # 选择文档数量
-            max_docs = st.slider(
-                "分析文档数量",
-                min_value=1,
-                max_value=min(len(active_docs), 10),
-                value=3,
-                help="同时分析的文档数量，越多越详细但速度越慢"
-            )
-
-        with col2:
             # 最大实体数
             max_entities = st.slider(
                 "每文档最大实体数",
@@ -1100,6 +1112,14 @@ elif page == "知识图谱":
                 help="从每个文档中提取的最大实体数量"
             )
 
+        with col2:
+            # 合并相似实体
+            merge_entities = st.checkbox(
+                "合并相似实体",
+                value=True,
+                help="自动合并名称相似的实体（如：'乔布斯'和'史蒂夫·乔布斯'）"
+            )
+
         st.markdown("---")
 
         # 生成按钮
@@ -1107,24 +1127,29 @@ elif page == "知识图谱":
 
         # 生成图谱
         if generate_btn:
-            st.info(f"📊 正在从 {min(max_docs, len(active_docs))} 个文档中提取实体和关系...")
-            st.write(f"调试信息：共有 {len(active_docs)} 个文档")
+            # 获取选中的文档
+            selected_docs = [active_docs[i] for i in selected_doc_indices]
+
+            st.info(f"📊 正在从 {len(selected_docs)} 个文档中提取实体和关系...")
+            st.write(f"**分析的文档：**")
+            for doc in selected_docs:
+                st.write(f"- 📄 {doc.file_name}")
 
             try:
                 # 初始化知识图谱
                 if 'kg' not in st.session_state:
                     st.session_state.kg = KnowledgeGraph(st.session_state.rag_chain.llm_client)
-                    st.write("✅ 知识图谱对象已初始化")
 
                 # 生成图谱
-                st.write("🔄 开始生成图谱...")
-                G = st.session_state.kg.generate_from_documents(
-                    active_docs,
-                    max_docs=max_docs
-                )
+                with st.spinner("正在分析文档并构建知识图谱..."):
+                    G = st.session_state.kg.generate_from_documents(
+                        selected_docs,
+                        max_docs=len(selected_docs)
+                    )
 
                 # 保存到session
                 st.session_state.current_graph = G
+                st.session_state.selected_docs_info = [d.file_name for d in selected_docs]
 
                 # 显示成功消息
                 st.success(f"✅ 成功生成知识图谱！")
@@ -1137,6 +1162,16 @@ elif page == "知识图谱":
         # 显示图谱
         if 'current_graph' in st.session_state:
             G = st.session_state.current_graph
+
+            st.markdown("---")
+            st.subheader("📊 知识图谱结果")
+
+            # 显示基于哪些文档生成
+            if 'selected_docs_info' in st.session_state:
+                st.markdown("**基于以下文档生成：**")
+                for doc_name in st.session_state.selected_docs_info:
+                    st.markdown(f"- 📄 {doc_name}")
+                st.markdown("---")
 
             # 统计信息
             stats = st.session_state.kg.get_graph_statistics(G)
