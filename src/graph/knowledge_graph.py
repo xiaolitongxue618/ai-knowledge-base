@@ -48,9 +48,9 @@ class KnowledgeGraph:
 {text}
 
 请以JSON格式返回，格式如下：
-{{
+{
   "entities": [
-    {{"name": "实体名称", "type": "类型（如：人物、地点、概念、组织等）"}}
+    {{"name": "实体名称", "type": "类型"}}
   ],
   "relations": [
     {{"source": "实体1", "target": "实体2", "relation": "关系描述"}}
@@ -59,9 +59,10 @@ class KnowledgeGraph:
 
 要求：
 1. 提取最重要的{max_entities}个实体
-2. 实体之间要有明确的关系
-3. 关系要简洁（1-4个字）
-4. 只返回JSON，不要其他内容
+2. 实体类型包括：人物、地点、组织、概念、时间等
+3. 实体之间要有明确的关系
+4. 关系要简洁（1-4个字）
+5. 只返回JSON，不要其他内容
 
 JSON："""
 
