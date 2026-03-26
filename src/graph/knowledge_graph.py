@@ -78,23 +78,56 @@ class KnowledgeGraph:
 
             result_text = response['response']
 
+            print(f"[DEBUG] LLM原始响应长度: {len(result_text)} 字符")
+            print(f"[DEBUG] LLM原始响应前200字符: {result_text[:200]}")
+
             # 清理JSON字符串
             result_text = result_text.strip()
             if '```json' in result_text:
                 result_text = result_text.split('```json')[1].split('```')[0].strip()
+                print(f"[DEBUG] 移除json标记后: {len(result_text)} 字符")
             elif '```' in result_text:
                 result_text = result_text.split('```')[1].split('```')[0].strip()
+                print(f"[DEBUG] 移除代码标记后: {len(result_text)} 字符")
 
             # 解析JSON
+            print(f"[DEBUG] 尝试解析JSON...")
             result = json.loads(result_text)
 
             # 验证格式
-            if 'entities' not in result or 'relations' not in result:
+            if 'entities' not in result:
+                print(f"[WARNING] JSON缺少entities字段，返回空结果")
                 return {'entities': [], 'relations': []}
+
+            if 'relations' not in result:
+                print(f"[WARNING] JSON缺少relations字段，设为空列表")
+                result['relations'] = []
+
+            # 确保entities和relations是列表
+            if not isinstance(result['entities'], list):
+                print(f"[WARNING] entities不是列表，转换为空列表")
+                result['entities'] = []
+
+            if not isinstance(result['relations'], list):
+                print(f"[WARNING] relations不是列表，转换为空列表")
+                result['relations'] = []
+
+            print(f"[DEBUG] JSON解析成功:")
+            print(f"  - 实体数: {len(result['entities'])}")
+            print(f"  - 关系数: {len(result['relations'])}")
 
             return result
 
+        except json.JSONDecodeError as e:
+            print(f"[ERROR] JSON解析失败: {str(e)}")
+            print(f"[ERROR] 响应内容: {result_text[:500]}")
+            st.warning(f"⚠️ JSON解析失败，LLM返回格式不正确")
+            return {'entities': [], 'relations': []}
+
         except Exception as e:
+            print(f"[ERROR] 实体抽取异常: {str(e)}")
+            import traceback
+            print(f"[ERROR] 详细错误: {traceback.format_exc()}")
             st.warning(f"⚠️ 实体抽取失败: {str(e)}")
             return {'entities': [], 'relations': []}
 
@@ -113,6 +146,15 @@ class KnowledgeGraph:
 
         # 添加实体节点
         for entity in entities:
+            # 确保entity是字典类型
+            if not isinstance(entity, dict):
+                print(f"[WARNING] 跳过无效实体（非字典类型）: {entity}")
+                continue
+
+            if 'name' not in entity:
+                print(f"[WARNING] 跳过无效实体（缺少name字段）: {entity}")
+                continue
+
             G.add_node(
                 entity['name'],
                 type=entity.get('type', '未知'),
@@ -121,13 +163,24 @@ class KnowledgeGraph:
 
         # 添加关系边
         for rel in relations:
+            # 确保rel是字典类型
+            if not isinstance(rel, dict):
+                print(f"[WARNING] 跳过无效关系（非字典类型）: {rel}")
+                continue
+
+            if 'source' not in rel or 'target' not in rel:
+                print(f"[WARNING] 跳过无效关系（缺少source或target）: {rel}")
+                continue
+
             source = rel['source']
             target = rel['target']
-            relation = rel['relation']
+            relation = rel.get('relation', '相关')
 
             # 确保节点存在
             if source in G.nodes and target in G.nodes:
                 G.add_edge(source, target, relation=relation)
+            else:
+                print(f"[WARNING] 跳过关系（节点不存在）: {source} -> {target}")
 
         return G
 
@@ -287,19 +340,49 @@ class KnowledgeGraph:
                 print(f"  - 关系数量: {len(result.get('relations', []))}")
 
                 # 显示抽取的实体
-                if result.get('entities'):
-                    print(f"[DEBUG] 抽取到的实体:")
-                    for entity in result['entities'][:5]:  # 只显示前5个
-                        print(f"    - {entity.get('name')} ({entity.get('type', '未知')})")
+                entities = result.get('entities', [])
+                if entities:
+                    print(f"[DEBUG] 抽取到的实体（前3个）:")
+                    for entity in entities[:3]:
+                        if isinstance(entity, dict):
+                            print(f"    - {entity.get('name', '未知')} ({entity.get('type', '未知')})")
+                        else:
+                            print(f"    - {entity} (类型: {type(entity)})")
 
                 # 去重实体
-                for entity in result.get('entities', []):
+                valid_entities = []
+                for entity in entities:
+                    if not isinstance(entity, dict):
+                        print(f"[WARNING] 跳过非字典实体: {entity}")
+                        continue
+
+                    if 'name' not in entity:
+                        print(f"[WARNING] 跳过无名字实体: {entity}")
+                        continue
+
                     if entity['name'] not in entity_names:
-                        all_entities.append(entity)
+                        valid_entities.append(entity)
                         entity_names.add(entity['name'])
 
-                # 添加关系
-                all_relations.extend(result.get('relations', []))
+                all_entities.extend(valid_entities)
+
+                # 验证并添加关系
+                relations = result.get('relations', [])
+                valid_relations = []
+                for rel in relations:
+                    if not isinstance(rel, dict):
+                        print(f"[WARNING] 跳过非字典关系: {rel}")
+                        continue
+
+                    if 'source' not in rel or 'target' not in rel:
+                        print(f"[WARNING] 跳过不完整关系: {rel}")
+                        continue
+
+                    valid_relations.append(rel)
+
+                all_relations.extend(valid_relations)
+
+                print(f"[DEBUG] 本轮处理完成: 有效实体 {len(valid_entities)} 个, 有效关系 {len(valid_relations)} 个")
 
                 print(f"[DEBUG] 文档 {i+1} 处理完成")
 
