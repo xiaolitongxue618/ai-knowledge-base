@@ -49,7 +49,7 @@ liquid_glass_css = """
 
     /* ==================== 主页面顶部间距优化 ==================== */
     .main .block-container {
-        padding-top: 1rem !important;
+        padding-top: 2rem !important;
         padding-bottom: 2rem !important;
         max-width: 1400px !important;
     }
@@ -614,156 +614,156 @@ if page == "问答":
 
     if not active_docs:
         st.info("知识库为空，请先上传文档")
-    else:
-        # 初始化messages
-        if 'messages' not in st.session_state:
-            st.session_state.messages = []
 
-        # ========== 历史记录模式（独立页面，不显示标题和输入框） ==========
-        if st.session_state.get('show_all_history', False):
-            st.markdown("### 📜 历史问答记录")
+    # 初始化messages（无论是否有文档）
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []
 
-            # 筛选按钮 - 3列布局
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                if st.button("📋 全部", key="filter_all", use_container_width=True):
-                    st.session_state.history_filter = "all"
-                    st.rerun()
-            with col2:
-                if st.button("📅 今天", key="filter_today", use_container_width=True):
-                    st.session_state.history_filter = "today"
-                    st.rerun()
-            with col3:
-                if st.button("📆 本周", key="filter_week", use_container_width=True):
-                    st.session_state.history_filter = "week"
-                    st.rerun()
+    # ========== 历史记录模式（独立页面，不显示标题和输入框） ==========
+    if st.session_state.get('show_all_history', False):
+        st.markdown("### 📜 历史问答记录")
 
-            # 搜索框独立一行
-            search_keyword = st.text_input("🔍 搜索历史记录", placeholder="输入关键词搜索...", key="search_history")
-
-            try:
-                # 获取所有历史问答
-                all_history = st.session_state.rag_chain.metadata_store.get_chat_history(limit=1000)
-
-                # 筛选逻辑
-                import datetime
-                from datetime import timedelta
-
-                filtered_history = []
-                today = datetime.datetime.now().date()
-                week_ago = today - datetime.timedelta(days=7)
-
-                for chat in all_history:
-                    # 筛选
-                    if st.session_state.get('history_filter') == 'today':
-                        chat_date = datetime.datetime.fromisoformat(chat['timestamp']).date()
-                        if chat_date != today:
-                            continue
-                    elif st.session_state.get('history_filter') == 'week':
-                        chat_date = datetime.datetime.fromisoformat(chat['timestamp']).date()
-                        if chat_date < week_ago:
-                            continue
-
-                    # 关键词搜索
-                    if search_keyword:
-                        if search_keyword.lower() not in chat['question'].lower():
-                            continue
-
-                    filtered_history.append(chat)
-
-                if not filtered_history:
-                    st.info("没有找到匹配的历史记录")
-                    if st.button("返回"):
-                        st.session_state.show_all_history = False
-                        st.rerun()
-                else:
-                    # 显示历史问答列表
-                    for idx, chat in enumerate(filtered_history):
-                        with st.expander(
-                            f"**Q:** {chat['question'][:60]}{'...' if len(chat['question']) > 60 else ''}",
-                            expanded=False,
-                            key=f"history_item_{idx}"
-                        ):
-                            # 显示问题
-                            st.markdown(f"**问题：** {chat['question']}")
-                            st.markdown(f"**时间：** {chat['timestamp']}")
-                            st.markdown("---")
-                            st.markdown(f"**答案：** {chat['answer']}")
-
-            except Exception as e:
-                st.error(f"加载历史记录失败: {str(e)}")
-
-            # 返回按钮
-            if st.button("← 返回问答", use_container_width=True):
-                st.session_state.show_all_history = False
+        # 筛选按钮 - 3列布局
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("📋 全部", key="filter_all", use_container_width=True):
+                st.session_state.history_filter = "all"
+                st.rerun()
+        with col2:
+            if st.button("📅 今天", key="filter_today", use_container_width=True):
+                st.session_state.history_filter = "today"
+                st.rerun()
+        with col3:
+            if st.button("📆 本周", key="filter_week", use_container_width=True):
+                st.session_state.history_filter = "week"
                 st.rerun()
 
-            st.markdown("---")
+        # 搜索框独立一行
+        search_keyword = st.text_input("🔍 搜索历史记录", placeholder="输入关键词搜索...", key="search_history")
 
-        # ========== 正常问答模式 ==========
-        else:
-            st.title("智能问答")
+        try:
+            # 获取所有历史问答
+            all_history = st.session_state.rag_chain.metadata_store.get_chat_history(limit=1000)
 
-            with st.expander("📖 使用说明", expanded=False):
-                st.markdown("""
-                1. 先在"文档管理"页面上传文档
-                2. 然后在这里提问，系统会基于文档内容回答
-                """)
+            # 筛选逻辑
+            import datetime
+            from datetime import timedelta
 
-            # 显示历史消息
-            for message in st.session_state.messages:
-                with st.chat_message(message['role']):
-                    st.markdown(message['content'])
+            filtered_history = []
+            today = datetime.datetime.now().date()
+            week_ago = today - datetime.timedelta(days=7)
 
-                    # 显示来源
-                    if message.get('sources'):
-                        with st.expander("检索来源"):
-                            for source in message['sources']:
-                                st.caption(f"{source['source_name']} [相似度: {source['similarity']:.2f}]")
+            for chat in all_history:
+                # 筛选
+                if st.session_state.get('history_filter') == 'today':
+                    chat_date = datetime.datetime.fromisoformat(chat['timestamp']).date()
+                    if chat_date != today:
+                        continue
+                elif st.session_state.get('history_filter') == 'week':
+                    chat_date = datetime.datetime.fromisoformat(chat['timestamp']).date()
+                    if chat_date < week_ago:
+                        continue
 
-            # 输入框
-            if prompt := st.chat_input("输入你的问题..."):
-                # 显示用户消息
-                st.session_state.messages.append({
-                    'role': 'user',
-                    'content': prompt
-                })
-                with st.chat_message('user'):
-                    st.markdown(prompt)
+                # 关键词搜索
+                if search_keyword:
+                    if search_keyword.lower() not in chat['question'].lower():
+                        continue
 
-                # 生成回答
-                with st.chat_message('assistant'):
-                    with st.spinner('思考中...'):
-                        try:
-                            result = st.session_state.rag_chain.ask(prompt)
-                        except Exception as e:
-                            st.error(f"❌ 生成回答失败: {str(e)}")
-                            st.stop()
+                filtered_history.append(chat)
 
-                    st.markdown(result['answer'])
+            if not filtered_history:
+                st.info("没有找到匹配的历史记录")
+                if st.button("返回"):
+                    st.session_state.show_all_history = False
+                    st.rerun()
+            else:
+                # 显示历史问答列表
+                for idx, chat in enumerate(filtered_history):
+                    with st.expander(
+                        f"**Q:** {chat['question'][:60]}{'...' if len(chat['question']) > 60 else ''}",
+                        expanded=False,
+                        key=f"history_item_{idx}"
+                    ):
+                        # 显示问题
+                        st.markdown(f"**问题：** {chat['question']}")
+                        st.markdown(f"**时间：** {chat['timestamp']}")
+                        st.markdown("---")
+                        st.markdown(f"**答案：** {chat['answer']}")
 
-                    if result.get('sources'):
-                        with st.expander("检索来源"):
-                            for source in result['sources']:
-                                st.caption(f"{source['source_name']} [相似度: {source['similarity']:.2f}]")
+        except Exception as e:
+            st.error(f"加载历史记录失败: {str(e)}")
 
-                # 保存到历史（内存）
-                st.session_state.messages.append({
-                    'role': 'assistant',
-                    'content': result['answer'],
-                    'sources': result.get('sources', []),
-                    'metadata': result.get('metadata', {})
-                })
+        # 返回按钮
+        if st.button("← 返回问答", use_container_width=True):
+            st.session_state.show_all_history = False
+            st.rerun()
 
-                # 保存到数据库
-                try:
-                    st.session_state.rag_chain.metadata_store.save_chat(
-                        question=prompt,
-                        answer=result['answer'],
-                        sources=result.get('sources', [])
-                    )
-                except Exception as e:
-                    st.warning(f"⚠️ 保存历史记录失败: {str(e)}")
+        st.markdown("---")
+
+    # ========== 正常问答模式 ==========
+    elif active_docs:
+        st.title("智能问答")
+
+        with st.expander("📖 使用说明", expanded=False):
+            st.markdown("""
+            1. 先在"文档管理"页面上传文档
+            2. 然后在这里提问，系统会基于文档内容回答
+            """)
+
+        # 显示历史消息
+        for message in st.session_state.messages:
+            with st.chat_message(message['role']):
+                st.markdown(message['content'])
+
+                # 显示来源
+                if message.get('sources'):
+                    with st.expander("检索来源"):
+                        for source in message['sources']:
+                            st.caption(f"{source['source_name']} [相似度: {source['similarity']:.2f}]")
+
+        # 输入框
+        if prompt := st.chat_input("输入你的问题..."):
+            # 显示用户消息
+            st.session_state.messages.append({
+                'role': 'user',
+                'content': prompt
+            })
+            with st.chat_message('user'):
+                st.markdown(prompt)
+
+            # 生成回答
+            with st.chat_message('assistant'):
+                with st.spinner('思考中...'):
+                    try:
+                        result = st.session_state.rag_chain.ask(prompt)
+                    except Exception as e:
+                        st.error(f"❌ 生成回答失败: {str(e)}")
+                        st.stop()
+
+                st.markdown(result['answer'])
+
+                if result.get('sources'):
+                    with st.expander("检索来源"):
+                        for source in result['sources']:
+                            st.caption(f"{source['source_name']} [相似度: {source['similarity']:.2f}]")
+
+            # 保存到历史（内存）
+            st.session_state.messages.append({
+                'role': 'assistant',
+                'content': result['answer'],
+                'sources': result.get('sources', []),
+                'metadata': result.get('metadata', {})
+            })
+
+            # 保存到数据库
+            try:
+                st.session_state.rag_chain.metadata_store.save_chat(
+                    question=prompt,
+                    answer=result['answer'],
+                    sources=result.get('sources', [])
+                )
+            except Exception as e:
+                st.warning(f"⚠️ 保存历史记录失败: {str(e)}")
 
 elif page == "文档管理":
     st.title("文档管理")
