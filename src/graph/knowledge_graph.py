@@ -7,11 +7,46 @@ import json
 import re
 from typing import List, Dict, Any
 import networkx as nx
-import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
-from matplotlib.font_manager import FontProperties
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+import platform
 import streamlit as st
+import subprocess
+import sys
+
+
+def check_and_install_chinese_font():
+    """检查并安装中文字体（仅Linux）"""
+    if platform.system() != 'Linux':
+        return
+
+    # 检查是否已有中文字体
+    available_fonts = [f.name for f in fm.fontManager.ttflist]
+    chinese_fonts = ['SimHei', 'WenQuanYi Micro Hei', 'Noto Sans CJK SC', 'WQY-ZenHei']
+
+    has_chinese = any(font in available_fonts for font in chinese_fonts)
+
+    if not has_chinese:
+        try:
+            print("[INFO] 正在安装中文字体...")
+            # 安装fonts-wqy-microhei（包含文泉驿微米黑）
+            subprocess.run(
+                ['sudo', 'apt-get', 'install', '-y', 'fonts-wqy-microhei'],
+                check=False,
+                capture_output=True
+            )
+            # 刷新字体缓存
+            subprocess.run(
+                ['fc-cache', '-fv'],
+                check=False,
+                capture_output=True
+            )
+            print("[INFO] 中文字体安装完成")
+        except Exception as e:
+            print(f"[WARNING] 无法安装中文字体: {str(e)}")
+            print("[INFO] 图谱中文可能显示为方框")
 
 
 class KnowledgeGraph:
@@ -196,6 +231,32 @@ class KnowledgeGraph:
             st.info("📊 暂无图谱数据")
             return
 
+        # 检查并安装中文字体
+        check_and_install_chinese_font()
+
+        # 设置中文字体
+        import matplotlib.font_manager as fm
+        import platform
+
+        # 尝试设置中文字体
+        system = platform.system()
+        if system == 'Linux':
+            # Linux系统，尝试常见中文字体
+            chinese_fonts = ['SimHei', 'WenQuanYi Micro Hei', 'Noto Sans CJK', 'Droid Sans Fallback']
+            for font in chinese_fonts:
+                try:
+                    plt.rcParams['font.sans-serif'] = [font]
+                    plt.rcParams['axes.unicode_minus'] = False
+                    break
+                except:
+                    continue
+        elif system == 'Darwin':  # macOS
+            plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'Heiti TC']
+            plt.rcParams['axes.unicode_minus'] = False
+        elif system == 'Windows':
+            plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei']
+            plt.rcParams['axes.unicode_minus'] = False
+
         # 创建图形
         plt.figure(figsize=(14, 10))
 
@@ -243,7 +304,6 @@ class KnowledgeGraph:
         nx.draw_networkx_labels(
             G, pos,
             font_size=11,
-            font_family='sans-serif',
             font_weight='bold',
             bbox=dict(
                 boxstyle='round,pad=0.5',
@@ -259,7 +319,6 @@ class KnowledgeGraph:
             G, pos,
             edge_labels,
             font_size=9,
-            font_family='sans-serif',
             bbox=dict(
                 boxstyle='round,pad=0.3',
                 facecolor='#FFFACD',
@@ -416,24 +475,24 @@ class KnowledgeGraph:
         Returns:
             JSON字符串
         """
-        data = {
+        export_data = {
             'nodes': [],
             'edges': []
         }
 
         # 导出节点
         for node in G.nodes():
-            data['nodes'].append({
+            export_data['nodes'].append({
                 'name': node,
                 'type': G.nodes[node].get('type', '未知')
             })
 
         # 导出边
-        for source, target, data in G.edges(data=True):
-            data['edges'].append({
+        for source, target, edge_data in G.edges(data=True):
+            export_data['edges'].append({
                 'source': source,
                 'target': target,
-                'relation': data.get('relation', '相关')
+                'relation': edge_data.get('relation', '相关')
             })
 
-        return json.dumps(data, ensure_ascii=False, indent=2)
+        return json.dumps(export_data, ensure_ascii=False, indent=2)
