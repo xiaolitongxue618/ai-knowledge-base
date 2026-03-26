@@ -1130,34 +1130,77 @@ elif page == "知识图谱":
             # 获取选中的文档
             selected_docs = [active_docs[i] for i in selected_doc_indices]
 
-            st.info(f"📊 正在从 {len(selected_docs)} 个文档中提取实体和关系...")
+            st.markdown("---")
+            st.markdown("## 🔄 开始生成知识图谱")
+
+            st.info(f"📊 准备从 {len(selected_docs)} 个文档中提取实体和关系...")
             st.write(f"**分析的文档：**")
             for doc in selected_docs:
                 st.write(f"- 📄 {doc.file_name}")
 
-            try:
-                # 初始化知识图谱
-                if 'kg' not in st.session_state:
-                    st.session_state.kg = KnowledgeGraph(st.session_state.rag_chain.llm_client)
+            st.markdown("---")
 
-                # 生成图谱
-                with st.spinner("正在分析文档并构建知识图谱..."):
+            try:
+                # 步骤1：初始化知识图谱
+                st.markdown("### 步骤 1/3: 初始化知识图谱对象")
+                if 'kg' not in st.session_state:
+                    st.write("正在创建知识图谱对象...")
+                    st.session_state.kg = KnowledgeGraph(st.session_state.rag_chain.llm_client)
+                    st.success("✅ 知识图谱对象创建成功")
+                else:
+                    st.success("✅ 知识图谱对象已存在")
+
+                st.markdown("---")
+
+                # 步骤2：生成图谱
+                st.markdown("### 步骤 2/3: 分析文档并构建图谱")
+                st.write("正在调用LLM提取实体和关系，这可能需要几分钟...")
+
+                # 创建进度条
+                progress_bar = st.progress(0, text="准备开始...")
+
+                try:
                     G = st.session_state.kg.generate_from_documents(
                         selected_docs,
                         max_docs=len(selected_docs)
                     )
+                    progress_bar.progress(100, text="文档分析完成！")
+                    st.success(f"✅ 成功处理 {len(selected_docs)} 个文档")
+
+                except Exception as doc_error:
+                    progress_bar.empty()
+                    st.error(f"❌ 文档处理失败: {str(doc_error)}")
+                    st.exception(doc_error)
+                    st.stop()
+
+                st.markdown("---")
+
+                # 步骤3：保存结果
+                st.markdown("### 步骤 3/3: 保存结果")
+                st.write(f"图谱节点数: {G.number_of_nodes()}")
+                st.write(f"图谱边数: {G.number_of_edges()}")
+
+                if G.number_of_nodes() == 0:
+                    st.warning("⚠️ 图谱没有节点，可能是实体抽取失败，请尝试其他文档或增加实体数量")
+                    st.stop()
 
                 # 保存到session
                 st.session_state.current_graph = G
                 st.session_state.selected_docs_info = [d.file_name for d in selected_docs]
 
-                # 显示成功消息
-                st.success(f"✅ 成功生成知识图谱！")
+                st.success("✅ 知识图谱生成成功！正在刷新页面...")
+
+                # 延迟一下，让用户看到成功消息
+                import time
+                time.sleep(2)
+
                 st.rerun()
 
             except Exception as e:
                 st.error(f"❌ 生成知识图谱失败: {str(e)}")
                 st.exception(e)
+                import traceback
+                st.error(f"详细错误：{traceback.format_exc()}")
 
         # 显示图谱
         if 'current_graph' in st.session_state:
