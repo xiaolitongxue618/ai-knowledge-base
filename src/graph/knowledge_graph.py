@@ -42,29 +42,32 @@ class KnowledgeGraph:
         if len(text) > 2000:
             text = text[:2000]
 
+        # 使用变量避免f-string格式化冲突
+        num_entities = max_entities
+
         prompt = f"""请从以下文本中提取实体和它们之间的关系。
 
-文本：
+【文本内容】
 {text}
 
-请以JSON格式返回，格式如下：
-{
-  "entities": [
-    {{"name": "实体名称", "type": "类型"}}
-  ],
-  "relations": [
-    {{"source": "实体1", "target": "实体2", "relation": "关系描述"}}
-  ]
-}
+【输出格式】
+请以JSON格式返回，包含两个字段：
+- entities: 实体列表，每个实体包含name（名称）和type（类型）
+- relations: 关系列表，每个关系包含source（源实体）、target（目标实体）和relation（关系描述）
 
-要求：
-1. 提取最重要的{max_entities}个实体
-2. 实体类型包括：人物、地点、组织、概念、时间等
+【实体类型】
+人物、地点、组织、概念、时间、产品、技术等
+
+【关系类型】
+创立、位于、属于、使用、生产、包含、相关、拥有、开发、发布等
+
+【要求】
+1. 最多提取 {num_entities} 个实体
+2. 关系描述1-4个字
 3. 实体之间要有明确的关系
-4. 关系要简洁（1-4个字）
-5. 只返回JSON，不要其他内容
+4. 只返回JSON，不要其他解释
 
-JSON："""
+请开始分析："""
 
         try:
             # 调用LLM
