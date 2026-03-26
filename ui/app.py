@@ -1065,14 +1065,6 @@ elif page == "知识图谱":
 
     st.markdown("---")
 
-    # 初始化知识图谱
-    if 'kg' not in st.session_state:
-        try:
-            st.session_state.kg = KnowledgeGraph(st.session_state.rag_chain.llm_client)
-        except Exception as e:
-            st.error(f"❌ 初始化知识图谱失败: {str(e)}")
-            st.stop()
-
     # 获取文档列表
     try:
         docs = st.session_state.rag_chain.metadata_store.list_documents()
@@ -1084,10 +1076,11 @@ elif page == "知识图谱":
     if not active_docs:
         st.info("📚 知识库为空，请先在\"文档管理\"页面上传文档")
     else:
-        # 侧边栏控制面板
-        with st.sidebar:
-            st.markdown("### ⚙️ 图谱设置")
+        # 控制面板（在主页面，不是sidebar）
+        st.subheader("⚙️ 图谱设置")
 
+        col1, col2 = st.columns(2)
+        with col1:
             # 选择文档数量
             max_docs = st.slider(
                 "分析文档数量",
@@ -1097,6 +1090,7 @@ elif page == "知识图谱":
                 help="同时分析的文档数量，越多越详细但速度越慢"
             )
 
+        with col2:
             # 最大实体数
             max_entities = st.slider(
                 "每文档最大实体数",
@@ -1106,17 +1100,24 @@ elif page == "知识图谱":
                 help="从每个文档中提取的最大实体数量"
             )
 
-            st.markdown("---")
+        st.markdown("---")
 
-            # 生成按钮
-            generate_btn = st.button("🚀 生成知识图谱", type="primary", use_container_width=True)
+        # 生成按钮
+        generate_btn = st.button("🚀 生成知识图谱", type="primary", use_container_width=True)
 
         # 生成图谱
         if generate_btn:
             st.info(f"📊 正在从 {min(max_docs, len(active_docs))} 个文档中提取实体和关系...")
+            st.write(f"调试信息：共有 {len(active_docs)} 个文档")
 
             try:
+                # 初始化知识图谱
+                if 'kg' not in st.session_state:
+                    st.session_state.kg = KnowledgeGraph(st.session_state.rag_chain.llm_client)
+                    st.write("✅ 知识图谱对象已初始化")
+
                 # 生成图谱
+                st.write("🔄 开始生成图谱...")
                 G = st.session_state.kg.generate_from_documents(
                     active_docs,
                     max_docs=max_docs
