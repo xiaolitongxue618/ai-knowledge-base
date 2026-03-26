@@ -265,30 +265,58 @@ JSON："""
 
         # 处理每个文档
         for i, doc in enumerate(documents[:max_docs]):
-            with st.spinner(f"正在分析文档 {i+1}/{min(len(documents), max_docs)}..."):
-                try:
-                    # 读取文档内容
-                    with open(doc.file_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
+            try:
+                print(f"[DEBUG] 开始处理文档 {i+1}/{min(len(documents), max_docs)}: {doc.file_name}")
 
-                    # 抽取实体和关系
-                    result = self.extract_entities_and_relations(content)
+                # 读取文档内容
+                print(f"[DEBUG] 读取文件: {doc.file_path}")
+                with open(doc.file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
 
-                    # 去重实体
-                    for entity in result['entities']:
-                        if entity['name'] not in entity_names:
-                            all_entities.append(entity)
-                            entity_names.add(entity['name'])
+                print(f"[DEBUG] 文档内容长度: {len(content)} 字符")
 
-                    # 添加关系
-                    all_relations.extend(result['relations'])
+                # 抽取实体和关系
+                print(f"[DEBUG] 开始调用LLM抽取实体和关系...")
+                result = self.extract_entities_and_relations(content)
 
-                except Exception as e:
-                    st.warning(f"⚠️ 处理文档 {doc.file_name} 失败: {str(e)}")
-                    continue
+                print(f"[DEBUG] LLM返回结果:")
+                print(f"  - 实体数量: {len(result.get('entities', []))}")
+                print(f"  - 关系数量: {len(result.get('relations', []))}")
+
+                # 显示抽取的实体
+                if result.get('entities'):
+                    print(f"[DEBUG] 抽取到的实体:")
+                    for entity in result['entities'][:5]:  # 只显示前5个
+                        print(f"    - {entity.get('name')} ({entity.get('type', '未知')})")
+
+                # 去重实体
+                for entity in result.get('entities', []):
+                    if entity['name'] not in entity_names:
+                        all_entities.append(entity)
+                        entity_names.add(entity['name'])
+
+                # 添加关系
+                all_relations.extend(result.get('relations', []))
+
+                print(f"[DEBUG] 文档 {i+1} 处理完成")
+
+            except Exception as e:
+                print(f"[ERROR] 处理文档 {doc.file_name} 失败: {str(e)}")
+                import traceback
+                print(f"[ERROR] 详细错误: {traceback.format_exc()}")
+                continue
+
+        print(f"[DEBUG] 所有文档处理完成")
+        print(f"[DEBUG] 总实体数: {len(all_entities)}")
+        print(f"[DEBUG] 总关系数: {len(all_relations)}")
 
         # 构建图谱
+        print(f"[DEBUG] 开始构建NetworkX图谱...")
         G = self.build_graph(all_entities, all_relations)
+
+        print(f"[DEBUG] 图谱构建完成")
+        print(f"[DEBUG] 节点数: {G.number_of_nodes()}")
+        print(f"[DEBUG] 边数: {G.number_of_edges()}")
 
         return G
 
